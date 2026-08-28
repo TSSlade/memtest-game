@@ -28,7 +28,7 @@ For development, using [uv](https://docs.astral.sh/uv/):
 
 ```bash
 uv venv --python 3.14 .venv
-uv pip install --python .venv/bin/python -e ".[dev]"
+uv pip install --python .venv/bin/python -e . --group dev
 ```
 
 ### A note on pygame

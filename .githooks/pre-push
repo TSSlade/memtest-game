@@ -25,7 +25,7 @@ else
 
 Set the environment up with:
     uv venv --python 3.14 .venv
-    uv pip install --python .venv/bin/python -e ".[dev]"
+    uv pip install --python .venv/bin/python -e . --group dev
 
 To push without checking anyway: git push --no-verify
 MSG

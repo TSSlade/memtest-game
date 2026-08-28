@@ -27,10 +27,10 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-          # Dependencies are declared in setup.py. The default glob looks only
-          # for pyproject.toml / requirements / lockfiles, matches nothing here,
-          # and yields a cache that never invalidates.
-          cache-dependency-glob: setup.py
+          # pyproject.toml is where dependencies are declared, so the cache
+          # invalidates when they change. Named explicitly rather than relying on
+          # the default glob, which also matches lockfiles this project has none of.
+          cache-dependency-glob: pyproject.toml
           # Distinct per job: both jobs otherwise race for one cache key.
           cache-suffix: checks
 
@@ -39,7 +39,7 @@ jobs:
       - name: Install Python and project
         run: |
           uv venv --python 3.14 .venv
-          uv pip install --python .venv/bin/python -e ".[dev]"
+          uv pip install --python .venv/bin/python -e . --group dev
 
       # pygame and pygame-ce both provide the `pygame` module and must never both
       # be installed, so assert on the distributions rather than the import,
@@ -84,7 +84,7 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-          cache-dependency-glob: setup.py
+          cache-dependency-glob: pyproject.toml
           cache-suffix: package
 
       - name: Build wheel
