@@ -19,6 +19,13 @@ from ..ui.demo_page import DemoPage
 from ..ui.sign_up_page import SignUp
 from ..ui.start_actual_task_page import StartActualTask
 from ..ui.welcome_page import Welcome
+from .session_record import (
+    AlertLog,
+    build_session_metadata,
+    check_output_writable,
+    warn_on_shared_alert_sounds,
+    write_session_metadata,
+)
 from .task import Task, task_param_based_on_screen
 from .task_guiding import TaskGuiding
 
@@ -31,7 +38,7 @@ MEMTEST_DIR = Path(__file__).resolve().parent.parent
 ASSETS_DIR = MEMTEST_DIR / "assets"
 
 
-def beep(alert, game_config, wait: bool = False) -> None:
+def beep(alert, game_config, wait: bool = False, alert_log=None) -> None:
     """Play the alert sound for `alert`.
 
     Returns as soon as playback starts. `pygame`'s `Sound.play()` is already
@@ -41,6 +48,10 @@ def beep(alert, game_config, wait: bool = False) -> None:
 
     Pass `wait=True` only where the process is about to do something that would
     cut playback short, such as shutting down the mixer.
+
+    When `alert_log` is given, the emission is recorded so the session's sidecar
+    carries which alert fired and when. The timestamp is the intended emission
+    time -- see `game.session_record` for why, and what that costs.
     """
     if not game_config.enable_audio_alerts:
         return
@@ -57,6 +68,8 @@ def beep(alert, game_config, wait: bool = False) -> None:
         return
     sound = pygame.mixer.Sound(file=audio_file)
     sound.set_volume(game_config.volume)
+    if alert_log is not None:
+        alert_log.record(alert, audio_file)
     sound.play()
     if wait:
         time.sleep(sound.get_length())
@@ -76,6 +89,7 @@ def dda_rule_based(
     is_eye_tracker,
     tracker,
     event_timestamps,
+    alert_log=None,
     session_config,
     game_config,
 ):
@@ -126,11 +140,11 @@ def dda_rule_based(
             print(
                 f"Starting break {break_tally} at {event_timestamps.get(curr_break + '_start')}"
             )
-            beep("start_break", game_config)
+            beep("start_break", game_config, alert_log=alert_log)
             for _ in tqdm(iterable=range(wait_breaks), unit="s"):
                 time.sleep(1)
             event_timestamps[f"{curr_break}_end"] = datetime.now()
-            beep("end_break", game_config)
+            beep("end_break", game_config, alert_log=alert_log)
             print(
                 f"Ending break {break_tally} at {event_timestamps.get(curr_break + '_end')}"
             )
@@ -180,6 +194,10 @@ def game_provider_rule_based(*args):
     signup_page_obj = SignUp(screen, screen_color=screen_color, config_path=config_path)
     user_info, session_config = signup_page_obj.handler()
     game_config = _load_game_config(config_path)
+    # Alerts double as synchronisation markers, so two raised alerts sharing a
+    # sound would be indistinguishable in a recording. Surface that at load.
+    warn_on_shared_alert_sounds(game_config)
+    alert_log = AlertLog()
     episode_len = session_config.num_trials
     trials_per_effort = session_config.trials_per_effort
     wait_baseline = session_config.wait_baseline
@@ -209,7 +227,7 @@ def game_provider_rule_based(*args):
     # so a recorded time always denotes the moment its sound began.
     print("Starting baseline - playing start_baseline sound")
     event_timestamps["baseline_start"] = datetime.now()
-    beep("start_baseline", game_config)
+    beep("start_baseline", game_config, alert_log=alert_log)
     print(
         f"Starting {wait_baseline}-sec. baseline at {event_timestamps.get('baseline_start')}"
     )
@@ -218,7 +236,7 @@ def game_provider_rule_based(*args):
     event_timestamps["baseline_end"] = datetime.now()
     print(f"Ending baseline at {event_timestamps.get('baseline_end')}")
     # Start game sound (before tasks begin)
-    beep("start_game", game_config)
+    beep("start_game", game_config, alert_log=alert_log)
     screen.fill("white")
     score_list = dda_rule_based(
         screen=screen,
@@ -233,19 +251,20 @@ def game_provider_rule_based(*args):
         is_eye_tracker=False,
         tracker=None,
         event_timestamps=event_timestamps,
+        alert_log=alert_log,
         session_config=session_config,
         game_config=game_config,
     )
     event_timestamps["endline_start"] = datetime.now()
     print(f"Starting endline at {event_timestamps.get('endline_start')}")
-    beep("start_endline", game_config)
+    beep("start_endline", game_config, alert_log=alert_log)
     for _ in tqdm(range(wait_endline), unit="s"):
         time.sleep(1)
     event_timestamps["endline_end"] = datetime.now()
     print(f"Ending endline at {event_timestamps.get('endline_end')}")
     # The only alert that must block: pygame.quit() below tears down the mixer
     # and would truncate playback.
-    beep("end_game", game_config, wait=True)
+    beep("end_game", game_config, wait=True, alert_log=alert_log)
     pygame.display.quit()
     pygame.quit()
     print(
@@ -254,18 +273,56 @@ def game_provider_rule_based(*args):
             for k, v in event_timestamps.items()
         )
     )
-    return score_list, user_info
+    return (
+        score_list,
+        user_info,
+        session_config,
+        game_config,
+        event_timestamps,
+        alert_log,
+    )
 
 
 def main():
-    score_list, user_info = game_provider_rule_based()
+    # Check the output location before a participant's time is spent, so an
+    # unwritable directory surfaces now rather than after the session.
+    output_dir = MEMTEST_DIR.parent.parent / "data" / "memtest"
+    problem = check_output_writable(output_dir)
+    if problem:
+        print(
+            f"[WARNING] Session output directory is not writable ({problem}). "
+            "The session will run, but its metadata sidecar cannot be written, "
+            "so recordings of it will not be alignable to protocol time."
+        )
+
+    (
+        score_list,
+        user_info,
+        session_config,
+        game_config,
+        event_timestamps,
+        alert_log,
+    ) = game_provider_rule_based()
     last = getattr(user_info, "last_name", "anon").strip().replace(" ", "_") or "anon"
     first = getattr(user_info, "name", "anon").strip().replace(" ", "_") or "anon"
     timestamp = datetime.now().strftime("%Y-%m-%d_%Hh%M")
 
-    # Output to grandparent's data/memtest/ directory
-    output_dir = MEMTEST_DIR.parent.parent / "data" / "memtest"
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    metadata_path = output_dir / f"{last}_{first}_{timestamp}_session.json"
+    written = write_session_metadata(
+        metadata_path,
+        build_session_metadata(
+            game_config=game_config,
+            session_config=session_config,
+            user_info=user_info,
+            event_timestamps=event_timestamps,
+            alert_log=alert_log,
+            root=MEMTEST_DIR,
+        ),
+    )
+    if written:
+        print(f"[OK] Session metadata written to {written} ({len(alert_log)} alerts)")
 
     plt.plot(score_list)
     plt.title("your score graph")

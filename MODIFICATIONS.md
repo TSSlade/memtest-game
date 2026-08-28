@@ -69,10 +69,29 @@ third-party audio licence and the assets are reproducible from source:
 python tools/generate_alerts.py
 ```
 
+### Session metadata
+
+Each run writes a sidecar `<subject>_<timestamp>_session.json` alongside its
+other output, recording:
+
+- the resolved audio mapping, with a SHA-256 of every asset, so the record does
+  not depend on the config file or the assets staying unchanged;
+- which alert fired and when;
+- protocol phase timestamps and the session configuration.
+
+This exists so a recording carries its own answer to "which sound marked which
+event" — without it, aligning a camera to protocol time depends on reconstructing
+a mapping that may since have changed.
+
+Alert timestamps are *intended* emission times: the moment `beep()` was called,
+not the moment sound left the speaker. See `game/session_record.py` for why, and
+what that costs.
+
+Configuration is also checked at load: two raised alerts sharing a sound cannot
+be told apart in a recording, and that now warns.
+
 ## Known gaps
 
-- The effective audio configuration is not yet written into session output, so a
-  recording does not carry a record of which sounds marked its phases. Alert
-  emission times are printed to the console but not persisted.
 - `task_complete` has a configured sound but is not raised by any call site.
-- Nothing validates that a configuration maps each alert to a distinct sound.
+- An unwritable output directory warns before the session but does not stop it.
+- The gap between intended and actual emission time is unmeasured.
