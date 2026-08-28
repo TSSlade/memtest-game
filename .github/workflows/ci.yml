@@ -27,12 +27,18 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-          # pyproject.toml is where dependencies are declared, so the cache
-          # invalidates when they change. Named explicitly rather than relying on
-          # the default glob, which also matches lockfiles this project has none of.
-          cache-dependency-glob: pyproject.toml
+          # Both files feed the resolution, so either changing should invalidate.
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
           # Distinct per job: both jobs otherwise race for one cache key.
           cache-suffix: checks
+
+      # uv.lock is committed but the install below does not consume it, so
+      # nothing else would notice it drifting away from pyproject.toml. This
+      # fails if the two disagree, keeping the lock usable for `uv sync`.
+      - name: Check uv.lock is current
+        run: uv lock --check
 
       # uv fetches the interpreter itself, so this does not depend on the runner
       # image happening to ship 3.14.

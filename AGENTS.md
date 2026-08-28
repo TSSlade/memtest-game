@@ -138,6 +138,15 @@ All configuration — packaging, dependencies, `ruff` and `pytest` — lives in
 reintroduce them. Dev tooling is a PEP 735 dependency group, not an extra, so it
 is installed with `--group dev` rather than `.[dev]`.
 
+`uv.lock` is committed. The install command above does not consume it, so CI runs
+`uv lock --check` to stop it drifting; if you change dependencies, run `uv lock`
+in the same change. To reproduce the exact locked environment instead of
+resolving fresh:
+
+```bash
+uv sync --group dev
+```
+
 The same two checks run in GitHub Actions on every push, alongside a job
 asserting that the built wheel actually contains the alert sounds, the guide
 image and the config files — each of those has silently gone missing from a
