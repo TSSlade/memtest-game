@@ -5,6 +5,7 @@ import pygame
 
 from ..config.session_config import SessionConfig
 from ..config.signup_config import SignUpConfig
+from ..paths import CONFIG_DIR
 from ..user.user_info import UserInfo
 from ..user.user_input import UserInput
 from .buttons import NextButton, Title
@@ -51,10 +52,7 @@ class SignUp:
         Otherwise, use SessionConfig defaults.
         """
         if config_path is None:
-            # Default to config directory relative to this file
-            config_path = (
-                Path(__file__).resolve().parent.parent / "config" / "config.json"
-            )
+            config_path = CONFIG_DIR / "config.json"
 
         if config_path.exists():
             try:

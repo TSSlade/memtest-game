@@ -1,11 +1,7 @@
-from pathlib import Path
-
 import pygame
 
+from ..paths import ASSETS_DIR
 from .buttons import NextButton
-
-# Get the base directory for memtest (parent of ui/)
-MEMTEST_DIR = Path(__file__).resolve().parent.parent
 
 
 class DemoPage:
@@ -13,7 +9,7 @@ class DemoPage:
     # self.screen = screen
 
     def provide_demo(self, screen):
-        img1 = pygame.image.load(MEMTEST_DIR / "guide_en.png")
+        img1 = pygame.image.load(ASSETS_DIR / "guide_en.png")
         next_obj = NextButton(screen, border_color=(255, 255, 255))
         terminated = False
         while not terminated:

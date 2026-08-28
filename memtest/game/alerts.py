@@ -11,12 +11,10 @@ exactly the state that makes an audio track unmatchable to protocol time.
 """
 
 import time
-from pathlib import Path
 
 import pygame
 
-# Get the base directory for memtest (parent of game/)
-MEMTEST_DIR = Path(__file__).resolve().parent.parent
+from ..paths import MEMTEST_DIR
 
 
 def beep(alert, game_config, wait: bool = False, alert_log=None) -> None:

@@ -16,6 +16,7 @@ import pandas as pd
 import pygame
 
 from ..config.game_config import GameConfig
+from ..paths import CONFIG_DIR, MEMTEST_DIR
 from ..ui.demo_page import DemoPage
 from ..ui.sign_up_page import SignUp
 from ..ui.start_actual_task_page import StartActualTask
@@ -30,14 +31,6 @@ from .session_record import (
 )
 from .task import Task, task_param_based_on_screen
 from .task_guiding import TaskGuiding
-
-# Make CWD be the folder this file lives in (handles symlinks, uv, etc.)
-# Handles issues that otherwise arise from running via `uv run <path>/main_game.py`
-# os.chdir(Path(__file__).resolve().parent)
-
-# Get the base directory for memtest (parent of game/)
-MEMTEST_DIR = Path(__file__).resolve().parent.parent
-ASSETS_DIR = MEMTEST_DIR / "assets"
 
 
 def default_output_dir() -> Path:
@@ -137,7 +130,7 @@ def dda_rule_based(
 def _load_game_config(config_path: Path | None = None) -> GameConfig:
     """Load game configuration from JSON file or use defaults."""
     if config_path is None:
-        config_path = MEMTEST_DIR / "config" / "config.json"
+        config_path = CONFIG_DIR / "config.json"
 
     if config_path.exists():
         try:
@@ -166,7 +159,7 @@ def game_provider_rule_based(*args):
     welcome_obj.handler()
     screen.fill(screen_color)
     # Use default config path (can be overridden via args if needed)
-    config_path = MEMTEST_DIR / "config" / "config.json"
+    config_path = CONFIG_DIR / "config.json"
     signup_page_obj = SignUp(screen, screen_color=screen_color, config_path=config_path)
     user_info, session_config = signup_page_obj.handler()
     game_config = _load_game_config(config_path)
