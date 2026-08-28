@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Generate the protocol alert sounds.
 
 The alerts serve two purposes. The obvious one is telling the participant that
@@ -27,15 +26,22 @@ rather than being opaque binaries.
 
 Usage::
 
-    python tools/generate_alerts.py                 # all registers
-    python tools/generate_alerts.py --register warm # just one
+    python -m memtest.tools.generate_alerts                 # all registers
+    python -m memtest.tools.generate_alerts --register warm # just one
+
+Writes into the package's own asset directory by default, which is what
+regenerating in a source checkout wants. An installed copy is normally not
+writable, so `--out` is required there; the error says so.
 """
 
 import argparse
+import os
 import wave
 from pathlib import Path
 
 import numpy as np
+
+from ..paths import ALERTS_DIR
 
 SAMPLE_RATE = 48_000
 DURATION_S = 0.45
@@ -121,6 +127,24 @@ def generate(out_root: Path, registers: list[str]) -> None:
         print(f"{register:7s} {len(plan)} alerts  {tones[0]}-{tones[-1]} Hz")
 
 
+def unwritable_reason(out_root: Path) -> str | None:
+    """Return why `out_root` cannot be written to, or None if it can.
+
+    Checked up front so an installed, read-only copy fails with an instruction
+    rather than part-way through writing a register.
+    """
+    probe = out_root
+    while not probe.exists():
+        if probe.parent == probe:
+            return f"no existing parent directory for {out_root}"
+        probe = probe.parent
+    if not probe.is_dir():
+        return f"{probe} is not a directory"
+    if not os.access(probe, os.W_OK):
+        return f"{probe} is not writable"
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
@@ -132,10 +156,22 @@ def main() -> None:
     parser.add_argument(
         "--out",
         type=Path,
-        default=Path(__file__).resolve().parent.parent / "assets" / "alerts",
-        help="Output root; one subdirectory per register.",
+        default=ALERTS_DIR,
+        help=(
+            "Output root; one subdirectory per register. Defaults to the "
+            "package's own asset directory, which is only writable in a "
+            "source checkout."
+        ),
     )
     args = parser.parse_args()
+    problem = unwritable_reason(args.out)
+    if problem:
+        parser.exit(
+            2,
+            f"[ERROR] Cannot write alerts to {args.out} ({problem}).\n"
+            "Pass --out with a writable directory, then point the alert paths "
+            "in your config file at it.\n",
+        )
     generate(args.out, args.register or sorted(REGISTERS))
 
 

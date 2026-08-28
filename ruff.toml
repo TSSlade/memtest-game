@@ -2,7 +2,7 @@
 # source of packaging truth.
 
 line-length = 88
-target-version = "py39"
+target-version = "py310"
 
 [lint]
 # Ruff's defaults (pyflakes + a subset of pycodestyle errors), plus import
