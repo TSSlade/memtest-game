@@ -29,6 +29,9 @@ setup(
         "matplotlib",
         "tqdm",
     ],
+    # Declared so lint and test tooling is shared rather than per-machine.
+    # Install with: uv pip install -e ".[dev]"
+    extras_require={"dev": ["pytest", "ruff"]},
     entry_points={"console_scripts": ["memtest = memtest.game.main_game:main"]},
     # Forked from masoudrahimi39/visual-working-memory-game at 646b46e381.
     # Original copyright retained in LICENSE; see MODIFICATIONS.md for the

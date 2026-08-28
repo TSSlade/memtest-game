@@ -1,0 +1,12 @@
+# Lint settings, kept in a dedicated file so `setup.py` remains the single
+# source of packaging truth.
+
+line-length = 88
+target-version = "py39"
+
+[lint]
+# Ruff's defaults (pyflakes + a subset of pycodestyle errors), plus import
+# sorting and pyupgrade. E501 is deliberately absent: much of the inherited
+# upstream code carries long descriptive docstrings, and reflowing them would
+# produce a large diff that obscures the fork's own changes.
+select = ["E4", "E7", "E9", "F", "I", "UP"]
