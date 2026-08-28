@@ -101,7 +101,6 @@ be told apart in a recording, and that now warns.
 
 ## Known gaps
 
-- `task_complete` has a configured sound but is not raised by any call site.
 - `tools/generate_alerts.py` is a repository script and is not shipped in the
   installed package.
 - The gap between intended and actual emission time is unmeasured.

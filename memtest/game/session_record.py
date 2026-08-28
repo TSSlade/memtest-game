@@ -37,8 +37,9 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 
-# Alerts that `game.main_game` actually raises. Kept here so validation can
-# distinguish a genuine collision from a harmless one on an unused alert.
+# Every alert that can actually fire. Validation filters on this, so an alert
+# that fires without being listed here gets no collision checking at all --
+# which is how `task_complete` went unchecked while firing once per task.
 RAISED_ALERTS = (
     "start_baseline",
     "start_game",
@@ -46,6 +47,7 @@ RAISED_ALERTS = (
     "end_break",
     "start_endline",
     "end_game",
+    "task_complete",
 )
 
 
@@ -90,9 +92,11 @@ def find_shared_alert_sounds(game_config) -> dict[str, list[str]]:
     """Return sounds mapped to more than one *raised* alert.
 
     Two raised alerts sharing a sound cannot be told apart in a recording, which
-    makes them useless as distinct synchronisation markers. Unraised alerts are
-    ignored: `task_complete` is configured but never fired, so a collision
-    involving only it is harmless.
+    makes them useless as distinct synchronisation markers.
+
+    Only alerts in `RAISED_ALERTS` are considered, since a sound that never
+    plays cannot be confused with anything. Keep that tuple honest: an alert
+    omitted from it while still firing is checked by nothing.
     """
     by_sound: dict[str, list[str]] = {}
     for alert, path in game_config.audio_files.items():
