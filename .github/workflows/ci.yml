@@ -22,29 +22,28 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv
-        # Pinned exactly: setup-uv publishes moving major tags only through
-        # v7, so `@v10` does not resolve.
+        # Pinned exactly: setup-uv publishes moving major tags only through v7,
+        # so `@v10` does not resolve.
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-          cache-dependency-glob: setup.py
-          cache-suffix: package
-          # Dependencies are declared in setup.py; the default glob looks only
+          # Dependencies are declared in setup.py. The default glob looks only
           # for pyproject.toml / requirements / lockfiles, matches nothing here,
           # and yields a cache that never invalidates.
           cache-dependency-glob: setup.py
-          # Distinct per job: the two jobs otherwise race for one cache key.
+          # Distinct per job: both jobs otherwise race for one cache key.
           cache-suffix: checks
 
-      # uv fetches the interpreter itself, so this does not depend on the
-      # runner image happening to ship 3.14.
+      # uv fetches the interpreter itself, so this does not depend on the runner
+      # image happening to ship 3.14.
       - name: Install Python and project
         run: |
           uv venv --python 3.14 .venv
           uv pip install --python .venv/bin/python -e ".[dev]"
 
-      # pygame and pygame-ce both provide the `pygame` module and must never
-      # both be installed, so assert on the distributions rather than the import.
+      # pygame and pygame-ce both provide the `pygame` module and must never both
+      # be installed, so assert on the distributions rather than the import,
+      # which cannot tell them apart.
       - name: Confirm pygame-ce is installed and upstream pygame is not
         run: |
           .venv/bin/python - <<'PY'
@@ -70,8 +69,8 @@ jobs:
       - name: Ruff
         run: .venv/bin/ruff check .
 
-      # conftest.py selects the dummy SDL drivers, so no display or sound card
-      # is needed. pygame-ce wheels bundle SDL, so there is nothing to apt-get.
+      # conftest.py selects the dummy SDL drivers, so no display or sound card is
+      # needed. pygame-ce wheels bundle SDL, so there is nothing to apt-get.
       - name: Pytest
         run: .venv/bin/pytest
 
@@ -82,8 +81,6 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Install uv
-        # Pinned exactly: setup-uv publishes moving major tags only through
-        # v7, so `@v10` does not resolve.
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
@@ -93,13 +90,14 @@ jobs:
       - name: Build wheel
         run: uv build --wheel --out-dir dist
 
-      # The guide image and the alert sounds have both gone missing from a build
-      # before, each time silently. Assert on the wheel's contents, not on the
-      # working tree's.
+      # The guide image and the generator have each silently vanished from a
+      # build before. Assert on the wheel's contents, not the working tree's.
       - name: Assert packaged data is present
         run: |
           python - <<'PY'
-          import glob, sys, zipfile
+          import glob
+          import sys
+          import zipfile
 
           wheel = sorted(glob.glob("dist/*.whl"))[-1]
           names = set(zipfile.ZipFile(wheel).namelist())
@@ -112,7 +110,11 @@ jobs:
           }
           missing = sorted(required - names)
 
-          wavs = [n for n in names if n.startswith("memtest/assets/alerts/") and n.endswith(".wav")]
+          wavs = [
+              name
+              for name in names
+              if name.startswith("memtest/assets/alerts/") and name.endswith(".wav")
+          ]
           if len(wavs) != 21:
               missing.append(f"expected 21 alert wavs, found {len(wavs)}")
 
