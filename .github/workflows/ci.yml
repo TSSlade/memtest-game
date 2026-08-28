@@ -27,6 +27,14 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
+          cache-dependency-glob: setup.py
+          cache-suffix: package
+          # Dependencies are declared in setup.py; the default glob looks only
+          # for pyproject.toml / requirements / lockfiles, matches nothing here,
+          # and yields a cache that never invalidates.
+          cache-dependency-glob: setup.py
+          # Distinct per job: the two jobs otherwise race for one cache key.
+          cache-suffix: checks
 
       # uv fetches the interpreter itself, so this does not depend on the
       # runner image happening to ship 3.14.
@@ -79,6 +87,8 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
+          cache-dependency-glob: setup.py
+          cache-suffix: package
 
       - name: Build wheel
         run: uv build --wheel --out-dir dist
