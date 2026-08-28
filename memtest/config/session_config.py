@@ -29,7 +29,7 @@ class SessionConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "SessionConfig":
+    def from_dict(cls, data: dict) -> SessionConfig:
         """Create SessionConfig from dictionary, using defaults for missing keys."""
         defaults = cls()
         return cls(

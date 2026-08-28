@@ -108,12 +108,22 @@ dependency. Do not reintroduce top-level modules, and use relative imports
 
 ### Environment
 
-Use `uv`. The project installs editable with its dev extras:
+Use `uv` — not `python -m venv` and `pip`. The project requires **Python 3.14**
+and installs editable with its dev extras:
 
 ```bash
-uv venv .venv
+uv venv --python 3.14 .venv
 uv pip install --python .venv/bin/python -e ".[dev]"
 ```
+
+The dependency is **`pygame-ce`**, not `pygame`: only pygame-ce publishes CPython
+3.14 wheels. The two provide the same `pygame` module and cannot coexist, so do
+not add `pygame` to any requirement list, and uninstall it if an environment
+already has it.
+
+Because the floor is 3.14, PEP 649 deferred annotation evaluation is available:
+a class may refer to itself in its own method annotations without quoting. Do not
+reintroduce string forward references.
 
 ### Checks
 
@@ -124,6 +134,18 @@ Run both before reporting a change complete:
 ```
 
 `ruff` settings live in `ruff.toml`, `pytest` settings in `pytest.ini`.
+
+The same two checks run in GitHub Actions on every push, alongside a job
+asserting that the built wheel actually contains the alert sounds, the guide
+image and the config files — each of those has silently gone missing from a
+build before.
+
+A pre-push hook is available for the same checks locally. It is opt-in per
+clone:
+
+```bash
+git config core.hooksPath .githooks
+```
 
 ### Tests
 

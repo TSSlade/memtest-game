@@ -13,9 +13,19 @@ That second role drives the design:
   them cannot tell which one it found. A previous asset set had two alerts using
   literally the same file, which put one alignment attempt 34 seconds out.
 * **Bands avoid octave relationships.** Each tone carries a second harmonic at
-  2f, so if band spacing is an exact octave subdivision the harmonic of one
-  alert lands on the fundamental of another. A geometric step of 1.26 is
-  2**(1/3) and does exactly this; the steps below are chosen to miss it.
+  2f, so where two tones stand in a 2:1 or 4:1 ratio the harmonic of one lands
+  on the other and a matcher looking for the second sees energy from the first.
+  A geometric step of 1.26 is 2**(1/3) and does this by construction; so, less
+  obviously, does any combination where ``step**n * pair`` approaches 2 --
+  which is what an earlier `mid` and `bright` did, at 1.9803.
+
+  Perfect avoidance is not available. Seven alerts of two tones each is 14
+  tones inside a span of roughly 7.7x, so the mean ratio between neighbouring
+  tones is about 1.17 and every tone's double falls close to *some* other tone.
+  The parameters below were chosen by searching for the largest achievable
+  clearance, subject to the range and separation constraints here: about 4%,
+  against a theoretical best near 4.8% once the range spread is given up.
+  ``closest_octave_deviation`` reports it, and the test suite pins it.
 * **The range stays low.** Stacking seven separable bands naively pushes the
   last ones past 5 kHz, which is shrill and sits where hearing sensitivity is
   already falling away. All three registers here top out below 1.9 kHz.
@@ -62,9 +72,9 @@ SLOTS = (
 # step: geometric ratio between consecutive alerts' bands
 # pair: ratio between the two tones within one alert
 REGISTERS = {
-    "warm": {"base": 247, "step": 1.22, "pair": 1.25},
-    "mid": {"base": 262, "step": 1.29, "pair": 1.19},
-    "bright": {"base": 330, "step": 1.29, "pair": 1.19},
+    "warm": {"base": 247, "step": 1.2425, "pair": 1.1325},
+    "mid": {"base": 262, "step": 1.2975, "pair": 1.1375},
+    "bright": {"base": 330, "step": 1.2970, "pair": 1.1400},
 }
 
 
@@ -76,6 +86,39 @@ def band_plan(register: str) -> dict[str, tuple[int, int]]:
         low = cfg["base"] * cfg["step"] ** index
         plan[slot] = (round(low), round(low * cfg["pair"]))
     return plan
+
+
+def tones_of(register: str) -> list[int]:
+    """Every distinct tone in `register`, ascending."""
+    plan = band_plan(register)
+    return sorted({tone for pair in plan.values() for tone in pair})
+
+
+def closest_octave_deviation(register: str) -> float:
+    """How far the nearest 2:1 or 4:1 tone pair sits from that ratio.
+
+    Expressed as a fraction of the ratio, so 0.04 means the closest such pair is
+    4% away from being an exact octave or double octave. Larger is better; see
+    the module docstring for why this cannot be driven to a large value.
+    """
+    tones = tones_of(register)
+    return min(
+        abs(high / low - octave) / octave
+        for index, low in enumerate(tones)
+        for high in tones[index + 1 :]
+        for octave in (2.0, 4.0)
+    )
+
+
+def closest_tone_ratio(register: str) -> float:
+    """Ratio between the two nearest distinct tones in `register`.
+
+    Guards the other direction: tones that nearly coincide are as unhelpful as
+    tones an octave apart, and a `step` equal to `pair` makes adjacent alerts
+    share a tone outright.
+    """
+    tones = tones_of(register)
+    return min(high / low for low, high in zip(tones, tones[1:]))
 
 
 def _envelope(length: int, attack_s: float = 0.005, release_s: float = 0.30):
