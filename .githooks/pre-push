@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# Runs the same two checks CI runs, before a push leaves the machine.
+#
+# Enable with:
+#     git config core.hooksPath .githooks
+#
+# This is convenience, not a gate -- it only exists on machines where it has
+# been enabled, and `git push --no-verify` skips it. CI is the authority.
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+if [ -x .venv/bin/ruff ] && [ -x .venv/bin/pytest ]; then
+    ruff() { .venv/bin/ruff "$@"; }
+    pytest() { .venv/bin/pytest "$@"; }
+elif command -v uv >/dev/null 2>&1; then
+    ruff() { uv run --quiet ruff "$@"; }
+    pytest() { uv run --quiet pytest "$@"; }
+else
+    cat >&2 <<'MSG'
+[pre-push] Neither .venv nor uv found, so checks cannot run.
+
+Set the environment up with:
+    uv venv --python 3.14 .venv
+    uv pip install --python .venv/bin/python -e ".[dev]"
+
+To push without checking anyway: git push --no-verify
+MSG
+    exit 1
+fi
+
+echo "[pre-push] ruff"
+if ! ruff check .; then
+    echo "[pre-push] ruff failed -- push aborted." >&2
+    exit 1
+fi
+
+echo "[pre-push] pytest"
+if ! pytest; then
+    echo "[pre-push] tests failed -- push aborted." >&2
+    exit 1
+fi
+
+echo "[pre-push] ok"

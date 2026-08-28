@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch makes an in-flight run redundant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+
+      # uv fetches the interpreter itself, so this does not depend on the
+      # runner image happening to ship 3.14.
+      - name: Install Python and project
+        run: |
+          uv venv --python 3.14 .venv
+          uv pip install --python .venv/bin/python -e ".[dev]"
+
+      # pygame and pygame-ce both provide the `pygame` module and must never
+      # both be installed, so assert on the distributions rather than the import.
+      - name: Confirm pygame-ce is installed and upstream pygame is not
+        run: |
+          .venv/bin/python - <<'PY'
+          import importlib.metadata as md
+          import sys
+
+          names = {d.metadata["Name"].lower() for d in md.distributions()}
+          problems = []
+          if "pygame-ce" not in names:
+              problems.append("pygame-ce is not installed")
+          if "pygame" in names:
+              problems.append("upstream pygame is installed and conflicts with pygame-ce")
+          if problems:
+              for problem in problems:
+                  print("ERROR:", problem)
+              sys.exit(1)
+
+          import pygame
+
+          print("pygame module provided by pygame-ce", pygame.version.ver)
+          PY
+
+      - name: Ruff
+        run: .venv/bin/ruff check .
+
+      # conftest.py selects the dummy SDL drivers, so no display or sound card
+      # is needed. pygame-ce wheels bundle SDL, so there is nothing to apt-get.
+      - name: Pytest
+        run: .venv/bin/pytest
+
+  package:
+    name: Wheel contents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+
+      - name: Build wheel
+        run: uv build --wheel --out-dir dist
+
+      # The guide image and the alert sounds have both gone missing from a build
+      # before, each time silently. Assert on the wheel's contents, not on the
+      # working tree's.
+      - name: Assert packaged data is present
+        run: |
+          python - <<'PY'
+          import glob, sys, zipfile
+
+          wheel = sorted(glob.glob("dist/*.whl"))[-1]
+          names = set(zipfile.ZipFile(wheel).namelist())
+
+          required = {
+              "memtest/assets/guide_en.png",
+              "memtest/config/config.json",
+              "memtest/config/example-config.json",
+              "memtest/tools/generate_alerts.py",
+          }
+          missing = sorted(required - names)
+
+          wavs = [n for n in names if n.startswith("memtest/assets/alerts/") and n.endswith(".wav")]
+          if len(wavs) != 21:
+              missing.append(f"expected 21 alert wavs, found {len(wavs)}")
+
+          if missing:
+              print(f"{wheel} is missing:")
+              for item in missing:
+                  print("  -", item)
+              sys.exit(1)
+          print(f"{wheel}: all packaged data present ({len(wavs)} alert sounds)")
+          PY

@@ -115,6 +115,14 @@ Their frequency separation is a requirement rather than a preference — see
 .venv/bin/ruff check . && .venv/bin/pytest
 ```
 
+Both run in CI on every push, along with a check that the built wheel contains
+the alert sounds, the guide image and the config files. To run them locally
+before each push as well:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 [AGENTS.md](AGENTS.md) records the invariants this code has to preserve, and is
 worth reading before changing the protocol, the alerts or the sidecar.
 

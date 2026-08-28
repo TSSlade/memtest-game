@@ -135,6 +135,18 @@ Run both before reporting a change complete:
 
 `ruff` settings live in `ruff.toml`, `pytest` settings in `pytest.ini`.
 
+The same two checks run in GitHub Actions on every push, alongside a job
+asserting that the built wheel actually contains the alert sounds, the guide
+image and the config files — each of those has silently gone missing from a
+build before.
+
+A pre-push hook is available for the same checks locally. It is opt-in per
+clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ### Tests
 
 `tests/` covers the properties above — alert signal separation, config
