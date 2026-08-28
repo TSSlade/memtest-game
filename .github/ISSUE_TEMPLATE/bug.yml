@@ -1,0 +1,72 @@
+# Uses GitHub's built-in `bug` label, which every new repository already has, so
+# this works on day one with no label setup.
+name: Bug
+description: Something behaves differently from what it claims.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `unknown` is a real answer for the cause fields. A guess recorded as a
+        finding is worse than an admitted gap.
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Symptom
+      description: >
+        Observed, expected, and where it surfaced. Lead with the error text or
+        the wrong output — that is what a future search looks for.
+      placeholder: |
+        Expected: exit 0
+        Actual:   KeyError: 'run_id'
+        Surfaced: uv run nox -s smoke
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: The shortest command sequence that shows it.
+      render: bash
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Failing output, traceback, the offending file and line.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proximate-cause
+    attributes:
+      label: Proximate cause
+      description: The immediate mechanism.
+      value: unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Root cause
+      description: >
+        Why it was possible at all. Kept separate from the proximate cause on
+        purpose — fixing only the mechanism leaves the category open.
+      value: unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: How a fix gets proven
+      description: >
+        The check that must pass, written before the fix exists so the goalposts
+        cannot move afterwards.
+    validations:
+      required: true
