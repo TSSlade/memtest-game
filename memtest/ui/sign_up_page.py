@@ -88,9 +88,10 @@ class SignUp:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 raise SystemExit("Window closed by user")
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.next_button.handle_click(event):
-                    terminated = True
+            if event.type == pygame.MOUSEBUTTONDOWN and self.next_button.handle_click(
+                event
+            ):
+                terminated = True
             self.user_input.handle_event(event)
             self.session_input.handle_event(event)
             # rendering

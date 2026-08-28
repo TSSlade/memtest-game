@@ -65,12 +65,15 @@ testpaths = ["tests"]
 addopts = "-q --strict-markers"
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 target-version = "py314"
+# The template says ["src", "tests"] because it assumes a src layout. This
+# package sits at the repository root, so the equivalent is "." -- naming
+# "memtest" here would have ruff look for memtest/memtest/ and, not finding it,
+# sort this project's own imports as third-party.
+src = [".", "tests"]
 
 [tool.ruff.lint]
-# Ruff's defaults (pyflakes plus a subset of pycodestyle errors), with import
-# sorting and pyupgrade. E501 is deliberately absent: much of the inherited
-# upstream code carries long descriptive docstrings, and reflowing them would
-# produce a large diff that obscures the fork's own changes.
-select = ["E4", "E7", "E9", "F", "I", "UP"]
+# Matches tedals-monorepo/templates/software. Full `E` includes E501, so the
+# line-length above is enforced rather than advisory.
+select = ["E", "F", "I", "UP", "B", "SIM"]

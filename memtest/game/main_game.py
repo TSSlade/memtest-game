@@ -107,7 +107,8 @@ def dda_rule_based(
         # Check if we need a break, but skip if this is the last task
         if (step + 1) % trials_per_effort == 0 and (step + 1) != episode_len:
             print(
-                f"Finished step {step + 1} @ {trials_per_effort} tasks per trial | Taking {wait_breaks}-sec break"
+                f"Finished step {step + 1} @ {trials_per_effort} tasks per trial "
+                f"| Taking {wait_breaks}-sec break"
             )
             break_tally += 1
             curr_break = f"break_{break_tally:02}"

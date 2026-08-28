@@ -45,6 +45,7 @@ writable, so `--out` is required there; the error says so.
 """
 
 import argparse
+import itertools
 import os
 import wave
 from pathlib import Path
@@ -118,7 +119,7 @@ def closest_tone_ratio(register: str) -> float:
     share a tone outright.
     """
     tones = tones_of(register)
-    return min(high / low for low, high in zip(tones, tones[1:]))
+    return min(high / low for low, high in itertools.pairwise(tones))
 
 
 def _envelope(length: int, attack_s: float = 0.005, release_s: float = 0.30):

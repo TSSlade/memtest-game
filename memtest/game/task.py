@@ -36,17 +36,21 @@ class Task:
         """
         is_eye_tracker: bool: If True, there is a eye tracker device else there isn't.
         tracker: Eye tracker object; it is used if is_eye_tracker == True, else it is ignored.
-        tsk_nmbr: int: if is_eye_tracker True, it is used. it shows the the sequence of showing task to user in a trial.
+        tsk_nmbr: int: if is_eye_tracker True, it is used. it shows the the
+                sequence of showing task to user in a trial.
                 0 means it is the first task in the trial, 1 means the 2nd task in the rial.
-        indices_target: tuple: used to create the task. It contains indices of the cells which should be target cells.
+        indices_target: tuple: used to create the task. It contains indices of
+                        the cells which should be target cells.
                         indexing start from up left to right and then down
         dda_mthd: str: it determines which method used for DDA
-        user_info: dict: it is the user data. all elements of user_info are added to the __dict__ attribute of the obj
+        user_info: dict: it is the user data. all elements of user_info are
+                added to the __dict__ attribute of the obj
         difficutly: the correspondance difficutly of the task.
         num_x: number of columns in the task table
         num_y: number of the rows in the task table
         show_time: int: the task is shown to the user to memorize it for show_time seconds.
-        position_inti: the position of the most-upper-left hexagon in the task; it is passed to the HexagonTile
+        position_inti: the position of the most-upper-left hexagon in the task;
+                it is passed to the HexagonTile
         R_hexagon: float: the Radiu of the hexagon; it is passed to the HexagonTile
         sequence_response_time: list[float, float, ...]: each float is in second.
                 first element : delta_time between start answering and first click
@@ -201,10 +205,12 @@ class Task:
         return self.score
 
     def create_task(self, R_hexagon) -> list[HexagonTile]:
-        """Creates a hexaogonal tile map of size num_x * num_y correspondance to the indices_target and return a list of hexagons"""
+        """Creates a hexaogonal tile map of size num_x * num_y correspondance to
+        the indices_target and return a list of hexagons
+        """
 
         # determine if first cell is yellow or white
-        temp = True if 0 in self.indices_target else False
+        temp = 0 in self.indices_target
         hex_counter = 0
         leftmost_hexagon = HexagonTile(
             is_target_cell=temp,
@@ -222,7 +228,7 @@ class Task:
                 position = (position[0], position[1])
 
                 # determine if current cell is target or not (yellow or white)
-                is_target_cell = True if hex_counter in self.indices_target else False
+                is_target_cell = hex_counter in self.indices_target
                 leftmost_hexagon = HexagonTile(
                     is_target_cell=is_target_cell,
                     position=position,
@@ -244,7 +250,7 @@ class Task:
                 position = (position[0], position[1])
 
                 # determine if current cell is target or not (yellow or white)
-                is_target_cell = True if hex_counter in self.indices_target else False
+                is_target_cell = hex_counter in self.indices_target
                 hexagon = HexagonTile(
                     is_target_cell=is_target_cell,
                     position=position,
@@ -273,7 +279,7 @@ class Task:
         self.end_answering_ts = datetime.datetime.now()
         self.num_true = self.sequence_answer.count(1)
         self.num_false = self.sequence_answer.count(0)
-        self.nailed_it = True if self.num_true == self.n_target else False
+        self.nailed_it = self.num_true == self.n_target
         self.score = self.num_true / self.n_target
         delattr(self, "hexagons")
         # TODO: maybe i should delete the tracker attribute
