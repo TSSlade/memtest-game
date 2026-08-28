@@ -32,6 +32,11 @@ from .session_record import (
 from .task import Task, task_param_based_on_screen
 from .task_guiding import TaskGuiding
 
+# Value of the `_profile` key marking a configuration as a placeholder rather
+# than a research protocol. Carried in the file itself so a copy is still
+# recognisable.
+SMOKE_TEST_PROFILE = "smoke-test"
+
 
 def default_output_dir() -> Path:
     """Where session output goes.
@@ -126,6 +131,53 @@ def dda_rule_based(
         gameplay_data_df.to_csv(output_dir / f"{gameplay_data_file_name}.csv")
         gameplay_data_df.to_pickle(output_dir / f"{gameplay_data_file_name}.pkl")
     return score_list
+
+
+def config_profile(config_path: Path) -> str | None:
+    """Return the `_profile` marker from a config file, if it has one.
+
+    Underscore-prefixed keys are metadata: both `from_dict` implementations read
+    named keys and ignore the rest, so a marker costs nothing to carry.
+    """
+    try:
+        with open(config_path, encoding="utf-8") as handle:
+            return json.load(handle).get("_profile")
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def warn_if_smoke_test_config(config_path: Path) -> bool:
+    """Announce, unmissably, that the protocol being run is a placeholder.
+
+    The packaged default runs two trials with a five-second baseline so a fresh
+    install can be verified in seconds. It also loads without complaint, which
+    is the problem: a researcher who runs `memtest`, sees it work and starts
+    collecting has run a protocol that is not a study, and may not notice until
+    analysis. The failure mode is precisely someone who did not read the docs,
+    so the signal has to be at run time.
+    """
+    if config_profile(config_path) != SMOKE_TEST_PROFILE:
+        return False
+    try:
+        with open(config_path, encoding="utf-8") as handle:
+            session = json.load(handle).get("session", {})
+    except (OSError, json.JSONDecodeError):
+        session = {}
+    print(
+        "=" * 72,
+        "[SMOKE TEST] Running a placeholder protocol, NOT a research protocol",
+        f"[SMOKE TEST]   config: {config_path}",
+        f"[SMOKE TEST]   {session.get('num_trials', '?')} trials, "
+        f"{session.get('wait_baseline', '?')}s baseline, "
+        f"{session.get('wait_endline', '?')}s endline",
+        "[SMOKE TEST] This exists to verify audio, display and output paths.",
+        "[SMOKE TEST] For a real session, copy example-config.json, adapt it to",
+        "[SMOKE TEST] your design, and run:",
+        "[SMOKE TEST]   memtest --config my-protocol.json",
+        "=" * 72,
+        sep="\n",
+    )
+    return True
 
 
 def _load_game_config(config_path: Path | None = None) -> GameConfig:
@@ -296,7 +348,6 @@ def main(argv=None):
     # A typo'd --config must not silently fall back to the packaged default: that
     # would run the smoke-test protocol in place of the intended one, which looks
     # like a successful session and is not noticeable until analysis.
-    config_path = None
     if args.config is not None:
         config_path = Path(args.config)
         if not config_path.is_file():
@@ -306,6 +357,12 @@ def main(argv=None):
                 "Refusing to fall back to the packaged default, which is a "
                 "smoke-test protocol rather than a research one.\n",
             )
+    else:
+        config_path = CONFIG_DIR / "config.json"
+
+    # Keyed on the file's own `_profile` marker rather than on whether --config
+    # was passed, so a copy of the smoke-test config is still flagged.
+    is_smoke_test = warn_if_smoke_test_config(config_path)
 
     # Checked before a participant's time is spent, so an unusable output
     # location costs seconds rather than a whole session. Without the sidecar a
@@ -358,6 +415,11 @@ def main(argv=None):
             event_timestamps=event_timestamps,
             alert_log=alert_log,
             root=MEMTEST_DIR,
+            config_source={
+                "path": str(config_path),
+                "profile": config_profile(config_path),
+                "is_smoke_test": is_smoke_test,
+            },
         ),
     )
     if written:

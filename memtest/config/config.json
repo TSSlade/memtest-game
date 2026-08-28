@@ -1,4 +1,16 @@
 {
+  "_profile": "smoke-test",
+  "_comment": [
+    "This is a SMOKE-TEST protocol, not a research one. Its job is to run end",
+    "to end in seconds so you can confirm audio, display and output paths work",
+    "before a participant is in the chair. Two trials and a five-second",
+    "baseline are not a study.",
+    "To run a real protocol: copy example-config.json, adapt it to your design,",
+    "and pass it with `memtest --config my-protocol.json`. Do not edit this",
+    "file -- it lives inside the installed package.",
+    "Keys beginning with an underscore are metadata and are ignored by the",
+    "configuration loaders."
+  ],
   "session": {
     "num_trials": 2,
     "trials_per_effort": 1,

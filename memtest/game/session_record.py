@@ -35,7 +35,9 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+# 2 adds `config_source`, recording which configuration file a session ran from
+# and whether it was the smoke-test placeholder.
+SCHEMA_VERSION = 2
 
 # Every alert that can actually fire. Validation filters on this, so an alert
 # that fires without being listed here gets no collision checking at all --
@@ -170,11 +172,18 @@ def build_session_metadata(
     event_timestamps: dict,
     alert_log: AlertLog,
     root: Path,
+    config_source: dict | None = None,
 ) -> dict:
-    """Assemble the sidecar payload."""
+    """Assemble the sidecar payload.
+
+    `config_source` records which configuration file the session ran from and
+    whether it was a placeholder, so a smoke-test run is identifiable in a data
+    directory instead of looking like a real but oddly short session.
+    """
     return {
         "schema_version": SCHEMA_VERSION,
         "written_at": datetime.now().isoformat(timespec="milliseconds"),
+        "config_source": config_source or {},
         "subject": {
             "name": getattr(user_info, "name", None),
             "last_name": getattr(user_info, "last_name", None),
