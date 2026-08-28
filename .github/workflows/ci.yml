@@ -75,6 +75,12 @@ jobs:
       - name: Ruff
         run: .venv/bin/ruff check .
 
+      # Inherited upstream prose carried a dozen typos, including parameter
+      # names that did not exist. Configuration, including the exclusion of the
+      # verbatim CONSTITUTION.md mirror, lives in pyproject.toml.
+      - name: Codespell
+        run: .venv/bin/codespell
+
       # conftest.py selects the dummy SDL drivers, so no display or sound card is
       # needed. pygame-ce wheels bundle SDL, so there is nothing to apt-get.
       - name: Pytest

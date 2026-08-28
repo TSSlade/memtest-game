@@ -72,6 +72,32 @@ def test_guide_fa_is_not_referenced():
         assert "guide_fa" not in (REPO_ROOT / name).read_text(encoding="utf-8")
 
 
+def test_task_init_docstring_matches_its_signature():
+    """The docstring spent a long time naming parameters that did not exist.
+
+    Three of the names were near-misses of the real ones -- close enough to read
+    as correct, wrong enough to be useless to anyone matching them against the
+    signature -- and the two parameters this fork added were absent entirely.
+    The docstring is written in signature order so the agreement is checked here
+    rather than trusted.
+    """
+    import inspect
+
+    from memtest.game.task import Task
+
+    signature = [
+        name
+        for name in inspect.signature(Task.__init__).parameters
+        if name != "self"
+    ]
+    doc = Task.__init__.__doc__ or ""
+    documented = re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:", doc, re.M)
+
+    assert documented == signature, (
+        f"docstring lists {documented}, signature has {signature}"
+    )
+
+
 def test_constitution_is_present_and_attributed():
     """An unchanged mirror must retain its provenance and attribution."""
     text = (REPO_ROOT / "CONSTITUTION.md").read_text(encoding="utf-8")
