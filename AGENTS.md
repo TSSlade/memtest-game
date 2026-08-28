@@ -51,9 +51,11 @@ designed rather than chosen.
 
 ### Every raised alert goes through `beep()`, with `alert_log` passed
 
-`beep()` in `memtest/game/main_game.py` is the only sanctioned way to emit an
+`beep()` in `memtest/game/alerts.py` is the only sanctioned way to emit an
 alert. It resolves the path, honours the volume and enable flags, and — given
-`alert_log` — records the emission so it reaches the session sidecar.
+`alert_log` — records the emission so it reaches the session sidecar. It lives in
+its own module because both `main_game` and `task` call it and `main_game`
+imports `task`; that is what keeps every emission on one code path.
 
 An inline `pygame.mixer.Sound(...).play()` at a call site is a bug, not a
 shortcut: the sound reaches the recording while the sidecar has no record of
