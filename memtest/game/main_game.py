@@ -16,10 +16,12 @@ import pandas as pd
 import pygame
 
 from ..config.game_config import GameConfig
+from ..paths import CONFIG_DIR, MEMTEST_DIR
 from ..ui.demo_page import DemoPage
 from ..ui.sign_up_page import SignUp
 from ..ui.start_actual_task_page import StartActualTask
 from ..ui.welcome_page import Welcome
+from .alerts import beep
 from .session_record import (
     AlertLog,
     build_session_metadata,
@@ -30,13 +32,10 @@ from .session_record import (
 from .task import Task, task_param_based_on_screen
 from .task_guiding import TaskGuiding
 
-# Make CWD be the folder this file lives in (handles symlinks, uv, etc.)
-# Handles issues that otherwise arise from running via `uv run <path>/main_game.py`
-# os.chdir(Path(__file__).resolve().parent)
-
-# Get the base directory for memtest (parent of game/)
-MEMTEST_DIR = Path(__file__).resolve().parent.parent
-ASSETS_DIR = MEMTEST_DIR / "assets"
+# Value of the `_profile` key marking a configuration as a placeholder rather
+# than a research protocol. Carried in the file itself so a copy is still
+# recognisable.
+SMOKE_TEST_PROFILE = "smoke-test"
 
 
 def default_output_dir() -> Path:
@@ -48,43 +47,6 @@ def default_output_dir() -> Path:
     fixed, somewhere outside the installation entirely.
     """
     return Path.cwd() / "data" / "memtest"
-
-
-def beep(alert, game_config, wait: bool = False, alert_log=None) -> None:
-    """Play the alert sound for `alert`.
-
-    Returns as soon as playback starts. `pygame`'s `Sound.play()` is already
-    asynchronous; blocking for the sound's duration would delay the protocol by
-    several seconds per alert and, worse, make an event timestamp taken after
-    the call mean something different from one taken before it.
-
-    Pass `wait=True` only where the process is about to do something that would
-    cut playback short, such as shutting down the mixer.
-
-    When `alert_log` is given, the emission is recorded so the session's sidecar
-    carries which alert fired and when. The timestamp is the intended emission
-    time -- see `game.session_record` for why, and what that costs.
-    """
-    if not game_config.enable_audio_alerts:
-        return
-    audio_file = game_config.get_audio_file(alert)
-    if audio_file is None:
-        print(f"[WARNING] No audio file configured for alert: {alert}")
-        return
-    # Resolve relative paths against MEMTEST_DIR
-    if not audio_file.is_absolute():
-        audio_file = MEMTEST_DIR / audio_file
-    print(f"Triggering sound at {audio_file}")
-    if not audio_file.exists():
-        print(f"[ERROR] Audio file not found: {audio_file}")
-        return
-    sound = pygame.mixer.Sound(file=audio_file)
-    sound.set_volume(game_config.volume)
-    if alert_log is not None:
-        alert_log.record(alert, audio_file)
-    sound.play()
-    if wait:
-        time.sleep(sound.get_length())
 
 
 def dda_rule_based(
@@ -102,6 +64,7 @@ def dda_rule_based(
     tracker,
     event_timestamps,
     alert_log=None,
+    output_dir,
     session_config,
     game_config,
 ):
@@ -131,7 +94,7 @@ def dda_rule_based(
             tracker=tracker,
             task_number=step,
         )
-        score = task_obj.run_task(screen)
+        score = task_obj.run_task(screen, alert_log=alert_log)
         gameplay_data_list.append(vars(task_obj))
         print(
             f"[{step + 1}]/[{episode_len}]: {100 * score:1.2f}% of {n_target} targets"
@@ -162,18 +125,65 @@ def dda_rule_based(
             )
     if save_gameplay_data:
         gameplay_data_df = pd.DataFrame(gameplay_data_list)
-        # Output to grandparent's data/memtest/ directory
-        output_dir = default_output_dir()
+        # The caller's resolved output directory, not a freshly computed default:
+        # the behavioural data and the sidecar that timestamps it belong together.
         output_dir.mkdir(parents=True, exist_ok=True)
         gameplay_data_df.to_csv(output_dir / f"{gameplay_data_file_name}.csv")
         gameplay_data_df.to_pickle(output_dir / f"{gameplay_data_file_name}.pkl")
     return score_list
 
 
+def config_profile(config_path: Path) -> str | None:
+    """Return the `_profile` marker from a config file, if it has one.
+
+    Underscore-prefixed keys are metadata: both `from_dict` implementations read
+    named keys and ignore the rest, so a marker costs nothing to carry.
+    """
+    try:
+        with open(config_path, encoding="utf-8") as handle:
+            return json.load(handle).get("_profile")
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def warn_if_smoke_test_config(config_path: Path) -> bool:
+    """Announce, unmissably, that the protocol being run is a placeholder.
+
+    The packaged default runs two trials with a five-second baseline so a fresh
+    install can be verified in seconds. It also loads without complaint, which
+    is the problem: a researcher who runs `memtest`, sees it work and starts
+    collecting has run a protocol that is not a study, and may not notice until
+    analysis. The failure mode is precisely someone who did not read the docs,
+    so the signal has to be at run time.
+    """
+    if config_profile(config_path) != SMOKE_TEST_PROFILE:
+        return False
+    try:
+        with open(config_path, encoding="utf-8") as handle:
+            session = json.load(handle).get("session", {})
+    except (OSError, json.JSONDecodeError):
+        session = {}
+    print(
+        "=" * 72,
+        "[SMOKE TEST] Running a placeholder protocol, NOT a research protocol",
+        f"[SMOKE TEST]   config: {config_path}",
+        f"[SMOKE TEST]   {session.get('num_trials', '?')} trials, "
+        f"{session.get('wait_baseline', '?')}s baseline, "
+        f"{session.get('wait_endline', '?')}s endline",
+        "[SMOKE TEST] This exists to verify audio, display and output paths.",
+        "[SMOKE TEST] For a real session, copy example-config.json, adapt it to",
+        "[SMOKE TEST] your design, and run:",
+        "[SMOKE TEST]   memtest --config my-protocol.json",
+        "=" * 72,
+        sep="\n",
+    )
+    return True
+
+
 def _load_game_config(config_path: Path | None = None) -> GameConfig:
     """Load game configuration from JSON file or use defaults."""
     if config_path is None:
-        config_path = MEMTEST_DIR / "config" / "config.json"
+        config_path = CONFIG_DIR / "config.json"
 
     if config_path.exists():
         try:
@@ -191,7 +201,19 @@ def _load_game_config(config_path: Path | None = None) -> GameConfig:
     return GameConfig()
 
 
-def game_provider_rule_based(*args):
+def game_provider_rule_based(config_path=None, output_dir=None):
+    """Run one session.
+
+    `config_path` and `output_dir` come from the command line. They are real
+    parameters rather than the `*args` this used to take, because a signature
+    that accepted anything and used nothing is how `--output-dir` came to be
+    honoured for the sidecar and ignored for the behavioural data.
+    """
+    if config_path is None:
+        config_path = CONFIG_DIR / "config.json"
+    if output_dir is None:
+        output_dir = default_output_dir()
+
     event_timestamps = {}
     pygame.init()
     pygame.mixer.init()
@@ -201,8 +223,6 @@ def game_provider_rule_based(*args):
     welcome_obj = Welcome(screen)
     welcome_obj.handler()
     screen.fill(screen_color)
-    # Use default config path (can be overridden via args if needed)
-    config_path = MEMTEST_DIR / "config" / "config.json"
     signup_page_obj = SignUp(screen, screen_color=screen_color, config_path=config_path)
     user_info, session_config = signup_page_obj.handler()
     game_config = _load_game_config(config_path)
@@ -264,6 +284,7 @@ def game_provider_rule_based(*args):
         tracker=None,
         event_timestamps=event_timestamps,
         alert_log=alert_log,
+        output_dir=output_dir,
         session_config=session_config,
         game_config=game_config,
     )
@@ -301,6 +322,15 @@ def main(argv=None):
         description="Run a visual working memory session.",
     )
     parser.add_argument(
+        "--config",
+        default=None,
+        help=(
+            "Protocol configuration file. Defaults to the packaged "
+            "config.json, which is a smoke-test protocol, not a research one. "
+            "Copy example-config.json, adapt it, and pass it here."
+        ),
+    )
+    parser.add_argument(
         "--output-dir",
         default=None,
         help="Where to write session output. Defaults to ./data/memtest.",
@@ -314,6 +344,25 @@ def main(argv=None):
         ),
     )
     args = parser.parse_args(argv)
+
+    # A typo'd --config must not silently fall back to the packaged default: that
+    # would run the smoke-test protocol in place of the intended one, which looks
+    # like a successful session and is not noticeable until analysis.
+    if args.config is not None:
+        config_path = Path(args.config)
+        if not config_path.is_file():
+            parser.exit(
+                2,
+                f"[ERROR] Configuration file not found: {config_path}\n"
+                "Refusing to fall back to the packaged default, which is a "
+                "smoke-test protocol rather than a research one.\n",
+            )
+    else:
+        config_path = CONFIG_DIR / "config.json"
+
+    # Keyed on the file's own `_profile` marker rather than on whether --config
+    # was passed, so a copy of the smoke-test config is still flagged.
+    is_smoke_test = warn_if_smoke_test_config(config_path)
 
     # Checked before a participant's time is spent, so an unusable output
     # location costs seconds rather than a whole session. Without the sidecar a
@@ -349,7 +398,7 @@ def main(argv=None):
         game_config,
         event_timestamps,
         alert_log,
-    ) = game_provider_rule_based()
+    ) = game_provider_rule_based(config_path=config_path, output_dir=output_dir)
     last = getattr(user_info, "last_name", "anon").strip().replace(" ", "_") or "anon"
     first = getattr(user_info, "name", "anon").strip().replace(" ", "_") or "anon"
     timestamp = datetime.now().strftime("%Y-%m-%d_%Hh%M")
@@ -366,6 +415,11 @@ def main(argv=None):
             event_timestamps=event_timestamps,
             alert_log=alert_log,
             root=MEMTEST_DIR,
+            config_source={
+                "path": str(config_path),
+                "profile": config_profile(config_path),
+                "is_smoke_test": is_smoke_test,
+            },
         ),
     )
     if written:

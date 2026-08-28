@@ -35,10 +35,13 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+# 2 adds `config_source`, recording which configuration file a session ran from
+# and whether it was the smoke-test placeholder.
+SCHEMA_VERSION = 2
 
-# Alerts that `game.main_game` actually raises. Kept here so validation can
-# distinguish a genuine collision from a harmless one on an unused alert.
+# Every alert that can actually fire. Validation filters on this, so an alert
+# that fires without being listed here gets no collision checking at all --
+# which is how `task_complete` went unchecked while firing once per task.
 RAISED_ALERTS = (
     "start_baseline",
     "start_game",
@@ -46,6 +49,7 @@ RAISED_ALERTS = (
     "end_break",
     "start_endline",
     "end_game",
+    "task_complete",
 )
 
 
@@ -90,9 +94,11 @@ def find_shared_alert_sounds(game_config) -> dict[str, list[str]]:
     """Return sounds mapped to more than one *raised* alert.
 
     Two raised alerts sharing a sound cannot be told apart in a recording, which
-    makes them useless as distinct synchronisation markers. Unraised alerts are
-    ignored: `task_complete` is configured but never fired, so a collision
-    involving only it is harmless.
+    makes them useless as distinct synchronisation markers.
+
+    Only alerts in `RAISED_ALERTS` are considered, since a sound that never
+    plays cannot be confused with anything. Keep that tuple honest: an alert
+    omitted from it while still firing is checked by nothing.
     """
     by_sound: dict[str, list[str]] = {}
     for alert, path in game_config.audio_files.items():
@@ -166,11 +172,18 @@ def build_session_metadata(
     event_timestamps: dict,
     alert_log: AlertLog,
     root: Path,
+    config_source: dict | None = None,
 ) -> dict:
-    """Assemble the sidecar payload."""
+    """Assemble the sidecar payload.
+
+    `config_source` records which configuration file the session ran from and
+    whether it was a placeholder, so a smoke-test run is identifiable in a data
+    directory instead of looking like a real but oddly short session.
+    """
     return {
         "schema_version": SCHEMA_VERSION,
         "written_at": datetime.now().isoformat(timespec="milliseconds"),
+        "config_source": config_source or {},
         "subject": {
             "name": getattr(user_info, "name", None),
             "last_name": getattr(user_info, "last_name", None),

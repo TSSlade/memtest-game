@@ -21,7 +21,10 @@ setup(
     package_data={
         "memtest": ["assets/alerts/*/*.wav", "assets/*.png", "config/*.json"]
     },
-    python_requires=">=3.9",
+    # 3.10, not 3.9: the codebase annotates with PEP 604 unions (`Path | None`)
+    # in function signatures, which are evaluated at definition time. On 3.9 the
+    # package installs and then fails on import.
+    python_requires=">=3.10",
     install_requires=[
         "pygame>=2.1.2",
         "pandas",
@@ -29,6 +32,9 @@ setup(
         "matplotlib",
         "tqdm",
     ],
+    # Declared so lint and test tooling is shared rather than per-machine.
+    # Install with: uv pip install -e ".[dev]"
+    extras_require={"dev": ["pytest", "ruff"]},
     entry_points={"console_scripts": ["memtest = memtest.game.main_game:main"]},
     # Forked from masoudrahimi39/visual-working-memory-game at 646b46e381.
     # Original copyright retained in LICENSE; see MODIFICATIONS.md for the

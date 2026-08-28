@@ -26,8 +26,8 @@ class GameConfig:
             "end_break": Path("assets/alerts/warm/end_break.wav"),
             "start_endline": Path("assets/alerts/warm/start_endline.wav"),
             "end_game": Path("assets/alerts/warm/end_game.wav"),
-            # Not raised by any call site today, but given its own sound so that
-            # wiring it up later needs no reshuffling.
+            # Fires after every task, so this is the most frequent sound in a
+            # session and the one most often met when matching a recording.
             "task_complete": Path("assets/alerts/warm/task_complete.wav"),
         }
     )

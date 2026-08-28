@@ -1,21 +1,17 @@
 import datetime
 import math
 import time
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pygame
 
+from .alerts import beep
 from .hexagon import HexagonTile
 
 if TYPE_CHECKING:
     from config.game_config import GameConfig  # noqa: F401
     from config.session_config import SessionConfig  # noqa: F401
     from user.user_info import UserInfo  # noqa: F401
-
-
-# Get the base directory for memtest (parent of game/)
-MEMTEST_DIR = Path(__file__).resolve().parent.parent
 
 
 class Task:
@@ -87,8 +83,14 @@ class Task:
         # TODO: add task_number
         self.task_number = task_number
 
-    def run_task(self, screen):
-        """ """
+    def run_task(self, screen, alert_log=None):
+        """Run one task and return its score.
+
+        `alert_log` is passed rather than stored on the instance because
+        `main_game` serialises the task with `vars(task_obj)` into the gameplay
+        data; an accumulating log held as an attribute would be written into
+        every row.
+        """
         endTime = datetime.datetime.now() + datetime.timedelta(seconds=self.show_time)
         self.start_showing_task_ts = datetime.datetime.now()
         terminated = False
@@ -187,25 +189,12 @@ class Task:
         # end of answering to current task
         self.end_of_task()
 
-        # Play task_complete sound if available
-        if (
-            self.game_config
-            and self.game_config.enable_audio_alerts
-            and "task_complete" in self.game_config.audio_files
-        ):
-            audio_file = self.game_config.audio_files["task_complete"]
-            # Resolve relative paths against MEMTEST_DIR
-            if not audio_file.is_absolute():
-                audio_file = MEMTEST_DIR / audio_file
-            if audio_file.exists():
-                sound = pygame.mixer.Sound(file=audio_file)
-                sound.set_volume(self.game_config.volume)
-                sound.play()
-                time.sleep(sound.get_length())
-            else:
-                print(f"[WARNING] task_complete sound not found: {audio_file}")
-        else:
-            print("\a")  # Fallback to terminal beep
+        # Emitted through `beep()` so it lands in the session sidecar like every
+        # other alert. This fires once per task, making it the most frequent
+        # sound in a session and the one most likely to be encountered when
+        # matching a recording's audio track.
+        if self.game_config:
+            beep("task_complete", self.game_config, alert_log=alert_log)
 
         time.sleep(2)
 
