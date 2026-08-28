@@ -204,7 +204,7 @@ class Task:
         """Creates a hexaogonal tile map of size num_x * num_y correspondance to the indices_target and return a list of hexagons"""
 
         # determine if first cell is yellow or white
-        temp = True if 0 in self.indices_target else False
+        temp = 0 in self.indices_target
         hex_counter = 0
         leftmost_hexagon = HexagonTile(
             is_target_cell=temp,
@@ -222,7 +222,7 @@ class Task:
                 position = (position[0], position[1])
 
                 # determine if current cell is target or not (yellow or white)
-                is_target_cell = True if hex_counter in self.indices_target else False
+                is_target_cell = hex_counter in self.indices_target
                 leftmost_hexagon = HexagonTile(
                     is_target_cell=is_target_cell,
                     position=position,
@@ -244,7 +244,7 @@ class Task:
                 position = (position[0], position[1])
 
                 # determine if current cell is target or not (yellow or white)
-                is_target_cell = True if hex_counter in self.indices_target else False
+                is_target_cell = hex_counter in self.indices_target
                 hexagon = HexagonTile(
                     is_target_cell=is_target_cell,
                     position=position,
@@ -273,7 +273,7 @@ class Task:
         self.end_answering_ts = datetime.datetime.now()
         self.num_true = self.sequence_answer.count(1)
         self.num_false = self.sequence_answer.count(0)
-        self.nailed_it = True if self.num_true == self.n_target else False
+        self.nailed_it = self.num_true == self.n_target
         self.score = self.num_true / self.n_target
         delattr(self, "hexagons")
         # TODO: maybe i should delete the tracker attribute

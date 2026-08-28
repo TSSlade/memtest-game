@@ -85,7 +85,7 @@ class TaskGuiding:
         """Creates a hexagonal tile map of size num_x * num_y"""
 
         # determine if first cell is yellow or white
-        temp = True if 0 in self.indices_target else False
+        temp = 0 in self.indices_target
         hex_counter = 0
         leftmost_hexagon = HexagonTile(
             is_target_cell=temp,
@@ -103,7 +103,7 @@ class TaskGuiding:
                 position = (position[0], position[1])
 
                 # determine if current cell is target or not (yellow or white)
-                is_target_cell = True if hex_counter in self.indices_target else False
+                is_target_cell = hex_counter in self.indices_target
                 leftmost_hexagon = HexagonTile(
                     is_target_cell=is_target_cell,
                     position=position,
@@ -125,7 +125,7 @@ class TaskGuiding:
                 position = (position[0], position[1])
 
                 # determine if current cell is target or not (yellow or white)
-                is_target_cell = True if hex_counter in self.indices_target else False
+                is_target_cell = hex_counter in self.indices_target
                 hexagon = HexagonTile(
                     is_target_cell=is_target_cell,
                     position=position,

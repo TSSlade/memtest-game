@@ -139,13 +139,12 @@ class InputBox:
                     self.color_border_inactive
                 )  # Change the current color of the input box.
 
-        elif event.type == pygame.KEYDOWN:
-            if self.active:
-                if event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                else:
-                    self.text += event.unicode
-                self.txt_surface = self.FONT.render(self.text, True, self.text_color)
+        elif event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
+            self.txt_surface = self.FONT.render(self.text, True, self.text_color)
 
     def draw(self, screen):
         screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
