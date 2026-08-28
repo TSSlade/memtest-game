@@ -33,28 +33,33 @@ class Task:
         is_eye_tracker,
         task_number,
     ):
-        """
-        is_eye_tracker: bool: If True, there is a eye tracker device else there isn't.
-        tracker: Eye tracker object; it is used if is_eye_tracker == True, else it is ignored.
-        tsk_nmbr: int: if is_eye_tracker True, it is used. it shows the the
-                sequence of showing task to user in a trial.
-                0 means it is the first task in the trial, 1 means the 2nd task in the rial.
-        indices_target: tuple: used to create the task. It contains indices of
-                        the cells which should be target cells.
-                        indexing start from up left to right and then down
-        dda_mthd: str: it determines which method used for DDA
-        user_info: dict: it is the user data. all elements of user_info are
-                added to the __dict__ attribute of the obj
-        difficutly: the correspondance difficutly of the task.
-        num_x: number of columns in the task table
-        num_y: number of the rows in the task table
-        show_time: int: the task is shown to the user to memorize it for show_time seconds.
-        position_inti: the position of the most-upper-left hexagon in the task;
-                it is passed to the HexagonTile
-        R_hexagon: float: the Radiu of the hexagon; it is passed to the HexagonTile
-        sequence_response_time: list[float, float, ...]: each float is in second.
-                first element : delta_time between start answering and first click
-                second element : delta_time between last click and current click
+        """Set up one task: a hexagonal grid with a set of cells to memorise.
+
+        Parameters are listed in signature order.
+
+        indices_target: tuple: indices of the cells that should be target cells.
+                Indexing runs from the upper left, along each row, then down.
+        dda_mthd: str: which method is used for dynamic difficulty adjustment.
+        user_info: dict: the participant data. Every element of user_info is
+                added to this object's __dict__.
+        session_config: SessionConfig: the protocol's session parameters.
+        game_config: GameConfig: the game parameters, including the alert sounds
+                that double as camera synchronisation markers.
+        difficulty: float: the difficulty corresponding to this task.
+        num_x: number of columns in the task table.
+        num_y: number of rows in the task table.
+        show_time: int: how many seconds the task is shown for, for the
+                participant to memorise.
+        position_init: the position of the upper-leftmost hexagon in the task;
+                passed through to the HexagonTile.
+        R_hexagon: float: the radius of each hexagon; passed through to the
+                HexagonTile.
+        tracker: eye tracker object. Used when is_eye_tracker is True and
+                ignored otherwise; never exercised in this fork, see
+                MODIFICATIONS.md.
+        is_eye_tracker: bool: True when an eye tracker device is present.
+        task_number: int: used when is_eye_tracker is True. This task's position
+                within its trial: 0 is the first, 1 the second.
         """
         self.user_info = user_info
         self.session_config = session_config
@@ -78,6 +83,9 @@ class Task:
         self.start_answering_ts: datetime.datetime
         self.indices_answer: list[int] = []
         self.sequence_answer: list[int] = []
+        # Timedeltas, not floats. Gaps rather than absolute times: the first
+        # element is measured from the start of answering, each later one from
+        # the previous click.
         self.sequence_response_time: list[datetime.timedelta] = []
         self.num_true: int
         self.num_false: int
@@ -123,8 +131,8 @@ class Task:
             event_tag_ET = str(self.task_number) + "_MEMO_END"
             self.tracker.user_data(event_tag_ET)  # send event to eye tracker
 
-        # recal mode
-        # show the white screen to the user in order to get his/her answer
+        # recall mode
+        # show the white screen to the user in order to get their answer
         terminated = False  # if answering is terminated or not
         clicked_hexagon_id = set()
         count = 0
@@ -136,7 +144,7 @@ class Task:
                     pygame.quit()
                     raise SystemExit("Window closed by user")
                 if (event.type == pygame.MOUSEBUTTONUP) and (event.button == 1):
-                    t_current_click = datetime.datetime.now()  # the currect click time
+                    t_current_click = datetime.datetime.now()  # the current click time
                     pos = pygame.mouse.get_pos()  # position of the mouse click; (x, y)
 
                     # find the hexagon which the user clicked on
@@ -164,7 +172,7 @@ class Task:
                             self.indices_answer.append(hexagon.index)
                             clicked_hexagon_id.add(id(hexagon))
 
-                            # append this click data into sequenc_answer
+                            # append this click data into sequence_answer
                             if hexagon.is_answered_true:
                                 self.sequence_answer.append(1)
                             elif hexagon.is_answered_true is False:
@@ -205,8 +213,10 @@ class Task:
         return self.score
 
     def create_task(self, R_hexagon) -> list[HexagonTile]:
-        """Creates a hexaogonal tile map of size num_x * num_y correspondance to
-        the indices_target and return a list of hexagons
+        """Create a hexagonal tile map of num_x * num_y cells.
+
+        Cells whose index appears in indices_target are targets. Returns the
+        hexagons as a list.
         """
 
         # determine if first cell is yellow or white
@@ -287,13 +297,17 @@ class Task:
 
 
 def task_param_based_on_screen(screen, num_x=6, num_y=6):
-    """input
+    """Derive hexagon geometry from the screen size.
+
+    input
     -------
             screen: pygame screen object
     output
     -------
-            R_hexagon: radius of each hexagon based on screen size
-            position_int: the postion of the most lef hexagon based on scren size"""
+            R_hexagon: radius of each hexagon, based on screen size
+            position_init: the position of the leftmost hexagon, based on screen
+                    size
+    """
     screen_width, screen_height = screen.get_size()
     R_hexagon = screen_width / 25
     d_hexagon = 2 * R_hexagon * math.cos(math.radians(30))

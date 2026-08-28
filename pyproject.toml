@@ -47,7 +47,7 @@ memtest = "memtest.game.main_game:main"
 # Lint and test tooling, declared so it is shared rather than per-machine.
 # Install with: uv pip install --python .venv/bin/python -e . --group dev
 [dependency-groups]
-dev = ["pytest", "ruff"]
+dev = ["codespell", "pytest", "ruff"]
 
 # Everything lives under the single `memtest` package. A flat layout would claim
 # top-level names like `config`, `game` and `user` in site-packages, which
@@ -63,6 +63,14 @@ memtest = ["assets/alerts/*/*.wav", "assets/*.png", "config/*.json"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"
+
+[tool.codespell]
+# CONSTITUTION.md is a tag-pinned verbatim mirror: an upstream typo has to stay,
+# so it is never spell-checked. The rest are binary or data files.
+skip = "./.git,./.venv,./CONSTITUTION.md,./LICENSE,./uv.lock,./test_rule_base.csv,./test_rule_base.pkl,./github readme,*.png,*.wav,*.pkl"
+# "retuned" is what happened to the alert registers, not a misspelling of
+# "returned".
+ignore-words-list = "retuned"
 
 [tool.ruff]
 line-length = 100
