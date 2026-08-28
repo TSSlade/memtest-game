@@ -12,7 +12,16 @@ from memtest.paths import ALERTS_DIR
 from memtest.tools import generate_alerts as ga
 
 # The worst pairwise correlation documented per register in MODIFICATIONS.md.
-DOCUMENTED_WORST = {"warm": 0.041, "mid": 0.020, "bright": 0.008}
+DOCUMENTED_WORST = {"warm": 0.0265, "mid": 0.0191, "bright": 0.0129}
+
+# Clearance from the nearest 2:1 or 4:1 tone pair. Perfect avoidance is not
+# available -- see the generator's module docstring -- and ~4% is the practical
+# optimum under the range and separation constraints, so this pins the achieved
+# value rather than an aspiration.
+MIN_OCTAVE_MARGIN = 0.035
+
+# Two tones that nearly coincide are as unhelpful as two an octave apart.
+MIN_TONE_RATIO = 1.08
 
 # Every register is meant to top out below this, to stay clear of the shrill
 # region where hearing sensitivity is already falling away.
@@ -59,35 +68,31 @@ def test_step_is_not_an_octave_subdivision(register):
             )
 
 
-def _closest_octave_deviation(register: str) -> float:
-    """Smallest relative distance from any tone pair to a 2:1 or 4:1 ratio."""
-    plan = ga.band_plan(register)
-    tones = sorted({tone for pair in plan.values() for tone in pair})
-    return min(
-        abs(high / low - octave) / octave
-        for index, low in enumerate(tones)
-        for high in tones[index + 1 :]
-        for octave in (2.0, 4.0)
+@pytest.mark.parametrize("register", sorted(ga.REGISTERS))
+def test_no_tone_pair_sits_near_an_octave(register):
+    """No tone's harmonic may land on another tone.
+
+    Every register must clear this, not just the default. An earlier `mid` and
+    `bright` sat 0.9% from a 2:1 ratio, because `step**2 * pair` came out at
+    1.9803 -- a combination the original spacing rule did not consider.
+    """
+    margin = ga.closest_octave_deviation(register)
+    assert margin > MIN_OCTAVE_MARGIN, (
+        f"{register}: closest octave pair is {margin * 100:.2f}% away, "
+        f"below the {MIN_OCTAVE_MARGIN * 100:.1f}% floor"
     )
 
 
-def test_default_register_has_no_near_octave_tone_pair():
-    """`warm` is the default, so it is the one that must be clean."""
-    assert _closest_octave_deviation("warm") > 0.02
+@pytest.mark.parametrize("register", sorted(ga.REGISTERS))
+def test_tones_are_distinct_and_separated(register):
+    """Guards the failure mode where `step` equals `pair`.
 
-
-@pytest.mark.parametrize("register", ["mid", "bright"])
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Known deviation: step**2 * pair = 1.9803 in both registers, so "
-        "end_break's second harmonic lands ~0.9% from end_game's upper tone. "
-        "Measured correlation is nonetheless better than `warm`, and retuning "
-        "would change already-shipped assets -- tracked, not silently fixed."
-    ),
-)
-def test_alternate_registers_have_no_near_octave_tone_pair(register):
-    assert _closest_octave_deviation(register) > 0.02
+    That makes one alert's upper tone identical to the next alert's lower tone,
+    which improves an octave-margin score while making the two alerts harder to
+    tell apart, not easier.
+    """
+    assert len(ga.tones_of(register)) == 2 * len(ga.SLOTS), "tones coincide"
+    assert ga.closest_tone_ratio(register) > MIN_TONE_RATIO
 
 
 @pytest.mark.parametrize("register", sorted(ga.REGISTERS))

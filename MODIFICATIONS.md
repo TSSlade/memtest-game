@@ -81,14 +81,29 @@ another's fundamental.
 Three registers are provided under `memtest/assets/alerts/`, all topping out
 below 1.9 kHz:
 
-| register | range | worst pairwise correlation |
-| --- | --- | --- |
-| `warm` (default) | 247–1018 Hz | 0.041 |
-| `mid` | 262–1437 Hz | 0.020 |
-| `bright` | 330–1810 Hz | 0.008 |
+| register | range | worst pairwise correlation | clearance from nearest octave |
+| --- | --- | --- | --- |
+| `warm` (default) | 247–1029 Hz | 0.0265 | 4.05% |
+| `mid` | 262–1422 Hz | 0.0191 | 3.99% |
+| `bright` | 330–1791 Hz | 0.0129 | 4.05% |
 
 Lower correlation means two alerts are harder to confuse when matching audio.
 Switching register is a path change in the configuration.
+
+The clearance column is the distance from the nearest 2:1 or 4:1 tone pair to
+that exact ratio, and it exists because the first version of these registers got
+it wrong. `mid` and `bright` originally sat 0.9% from a 2:1 relationship —
+`step**2 * pair` came to 1.9803, a route to octave stacking the original spacing
+rule did not consider — so one alert's second harmonic landed about 10 Hz from
+another's upper tone. All three registers were retuned; nothing had yet been
+recorded against the old assets.
+
+Perfect avoidance is not achievable: 14 tones inside a 7.7x span leave a mean
+neighbouring ratio near 1.17, so every tone's double falls close to some other
+tone. About 4% is the practical optimum under these range constraints, against
+roughly 4.8% if the spread between registers were given up. The parameters were
+chosen by search, and the test suite pins both this clearance and the
+correlations above.
 
 The sounds are **generated**, not sourced, so the repository carries no
 third-party audio licence and the assets are reproducible from source:
@@ -139,13 +154,5 @@ therefore the most frequent sound in a session.
 
 - The gap between intended and actual emission time is unmeasured. This bounds
   the achievable alignment accuracy and is the most consequential item here.
-- In the `mid` and `bright` registers, `step**2 * pair` works out to 1.9803, so
-  `end_break`'s second harmonic lands about 0.9% from `end_game`'s upper tone —
-  roughly 10 Hz apart. This is the failure mode the band spacing is meant to
-  avoid, though measured pairwise correlation in both registers is still better
-  than in `warm`. Retuning would change already-shipped assets, and so would
-  invalidate alignment work done against them; it has not been done. `warm`, the
-  default, is clear of it. A test records the deviation so it cannot be
-  forgotten.
 - The task supports an eye tracker, but `is_eye_tracker` is hard-coded to
   `False` at the call site, so that path is never exercised.
