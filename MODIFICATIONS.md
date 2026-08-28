@@ -163,7 +163,20 @@ therefore the most frequent sound in a session.
 
 ## Known gaps
 
-- The gap between intended and actual emission time is unmeasured. This bounds
-  the achievable alignment accuracy and is the most consequential item here.
-- The task supports an eye tracker, but `is_eye_tracker` is hard-coded to
-  `False` at the call site, so that path is never exercised.
+Both are documented, accepted, and not planned. Each is tracked by an open issue
+labelled `known-limitation`, kept open for visibility rather than as a backlog
+item; the issues carry the reasoning, and what would have to change for either to
+be worth revisiting.
+
+- **The gap between intended and actual emission time is unmeasured**
+  ([#13](https://github.com/TSSlade/memtest-game/issues/13)). It biases every
+  alert timestamp in a sidecar by an unknown but systematic amount. The error is
+  one to two orders of magnitude below the tolerance these markers serve, and
+  measuring it needs bench instrumentation rather than a code change — see
+  `memtest/game/session_record.py` for the full argument.
+- **The eye-tracker path is never exercised**
+  ([#14](https://github.com/TSSlade/memtest-game/issues/14)). The task emits
+  trial-boundary events to a tracker, but `is_eye_tracker` is hard-coded to
+  `False` at every call site. It is inherited from upstream, its expected
+  interface is inferred rather than recorded, and this fork synchronises with
+  cameras and audio markers instead.
