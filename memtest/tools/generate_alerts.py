@@ -106,6 +106,35 @@ def render(low_hz: float, high_hz: float, duration_s: float = DURATION_S):
     return out * _envelope(length)
 
 
+def correlation(first, second) -> float:
+    """Normalised zero-lag correlation between two rendered alerts.
+
+    This is the figure quoted per register in MODIFICATIONS.md. Lower means two
+    alerts are harder to confuse when matching a recording's audio track, which
+    is the whole point of giving each one its own frequency band.
+    """
+    denominator = np.linalg.norm(first) * np.linalg.norm(second)
+    if not denominator:
+        return 0.0
+    return abs(float(np.dot(first, second) / denominator))
+
+
+def pairwise_correlations(register: str) -> dict[tuple[str, str], float]:
+    """Correlation for every pair of alerts in `register`."""
+    plan = band_plan(register)
+    rendered = {slot: render(low, high) for slot, (low, high) in plan.items()}
+    return {
+        (first, second): correlation(rendered[first], rendered[second])
+        for index, first in enumerate(SLOTS)
+        for second in SLOTS[index + 1 :]
+    }
+
+
+def worst_correlation(register: str) -> float:
+    """The highest pairwise correlation in `register` -- its weakest link."""
+    return max(pairwise_correlations(register).values())
+
+
 def write_wav(path: Path, samples) -> None:
     """Write mono 16-bit PCM, peak-normalised with headroom."""
     peak = np.abs(samples).max()
