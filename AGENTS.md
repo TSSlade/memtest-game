@@ -113,7 +113,7 @@ and installs editable with its dev extras:
 
 ```bash
 uv venv --python 3.14 .venv
-uv pip install --python .venv/bin/python -e ".[dev]"
+uv pip install --python .venv/bin/python -e . --group dev
 ```
 
 The dependency is **`pygame-ce`**, not `pygame`: only pygame-ce publishes CPython
@@ -133,7 +133,19 @@ Run both before reporting a change complete:
 .venv/bin/ruff check . && .venv/bin/pytest
 ```
 
-`ruff` settings live in `ruff.toml`, `pytest` settings in `pytest.ini`.
+All configuration — packaging, dependencies, `ruff` and `pytest` — lives in
+`pyproject.toml`. There is no `setup.py`, `pytest.ini` or `ruff.toml`; do not
+reintroduce them. Dev tooling is a PEP 735 dependency group, not an extra, so it
+is installed with `--group dev` rather than `.[dev]`.
+
+`uv.lock` is committed. The install command above does not consume it, so CI runs
+`uv lock --check` to stop it drifting; if you change dependencies, run `uv lock`
+in the same change. To reproduce the exact locked environment instead of
+resolving fresh:
+
+```bash
+uv sync --group dev
+```
 
 The same two checks run in GitHub Actions on every push, alongside a job
 asserting that the built wheel actually contains the alert sounds, the guide

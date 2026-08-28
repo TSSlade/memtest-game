@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Forked from masoudrahimi39/visual-working-memory-game at 646b46e381. Original
+# copyright retained in LICENSE; see MODIFICATIONS.md for the nature and extent
+# of the divergence.
+[project]
+name = "memtest-game"
+version = "0.2.0"
+description = """\
+Visual working memory task adapted for physiological research: structured \
+protocol phases, and audio alerts usable as camera synchronisation markers.\
+"""
+readme = "README.md"
+requires-python = ">=3.14"
+authors = [{ name = "Timothy Slade" }]
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+  "Intended Audience :: Science/Research",
+]
+dependencies = [
+  # pygame-ce, not pygame. They are a fork and its upstream, both provide the
+  # `pygame` module, and only pygame-ce publishes wheels for CPython 3.14 --
+  # upstream pygame stops at 3.13, where installing on 3.14 falls back to an
+  # sdist build that needs SDL development headers. The import is unchanged:
+  # `import pygame` still works.
+  #
+  # The two cannot coexist. If an environment already has upstream pygame,
+  # uninstall it first or the module that wins is undefined.
+  "pygame-ce>=2.5.8",
+  "pandas",
+  "numpy",
+  "matplotlib",
+  "tqdm",
+]
+
+[project.urls]
+Homepage = "https://github.com/TSSlade/memtest-game"
+
+[project.scripts]
+memtest = "memtest.game.main_game:main"
+
+# Lint and test tooling, declared so it is shared rather than per-machine.
+# Install with: uv pip install --python .venv/bin/python -e . --group dev
+[dependency-groups]
+dev = ["pytest", "ruff"]
+
+# Everything lives under the single `memtest` package. A flat layout would claim
+# top-level names like `config`, `game` and `user` in site-packages, which
+# collide with almost anything else installed alongside it. Stated explicitly
+# rather than left to auto-discovery, which would also try to claim `tests`.
+[tool.setuptools.packages.find]
+include = ["memtest*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+memtest = ["assets/alerts/*/*.wav", "assets/*.png", "config/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+# Ruff's defaults (pyflakes plus a subset of pycodestyle errors), with import
+# sorting and pyupgrade. E501 is deliberately absent: much of the inherited
+# upstream code carries long descriptive docstrings, and reflowing them would
+# produce a large diff that obscures the fork's own changes.
+select = ["E4", "E7", "E9", "F", "I", "UP"]
