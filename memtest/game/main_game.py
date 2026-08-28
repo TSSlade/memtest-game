@@ -1,3 +1,4 @@
+import argparse
 import json
 import random
 import time
@@ -36,6 +37,17 @@ from .task_guiding import TaskGuiding
 # Get the base directory for memtest (parent of game/)
 MEMTEST_DIR = Path(__file__).resolve().parent.parent
 ASSETS_DIR = MEMTEST_DIR / "assets"
+
+
+def default_output_dir() -> Path:
+    """Where session output goes.
+
+    Relative to the working directory, not to the package. Once installed as a
+    dependency the package lives in site-packages, so anything resolved relative
+    to it would write somewhere the operator never looks -- and, before this was
+    fixed, somewhere outside the installation entirely.
+    """
+    return Path.cwd() / "data" / "memtest"
 
 
 def beep(alert, game_config, wait: bool = False, alert_log=None) -> None:
@@ -151,7 +163,7 @@ def dda_rule_based(
     if save_gameplay_data:
         gameplay_data_df = pd.DataFrame(gameplay_data_list)
         # Output to grandparent's data/memtest/ directory
-        output_dir = MEMTEST_DIR.parent.parent / "data" / "memtest"
+        output_dir = default_output_dir()
         output_dir.mkdir(parents=True, exist_ok=True)
         gameplay_data_df.to_csv(output_dir / f"{gameplay_data_file_name}.csv")
         gameplay_data_df.to_pickle(output_dir / f"{gameplay_data_file_name}.pkl")
@@ -283,16 +295,51 @@ def game_provider_rule_based(*args):
     )
 
 
-def main():
-    # Check the output location before a participant's time is spent, so an
-    # unwritable directory surfaces now rather than after the session.
-    output_dir = MEMTEST_DIR.parent.parent / "data" / "memtest"
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="memtest",
+        description="Run a visual working memory session.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default=None,
+        help="Where to write session output. Defaults to ./data/memtest.",
+    )
+    parser.add_argument(
+        "--allow-unwritable-output",
+        action="store_true",
+        help=(
+            "Run even if the session metadata sidecar cannot be written. "
+            "Recordings of the session will not be alignable to protocol time."
+        ),
+    )
+    args = parser.parse_args(argv)
+
+    # Checked before a participant's time is spent, so an unusable output
+    # location costs seconds rather than a whole session. Without the sidecar a
+    # recording cannot be placed on protocol time, which usually makes the
+    # session worthless for synchronised analysis -- so this blocks by default.
+    output_dir = Path(args.output_dir) if args.output_dir else default_output_dir()
     problem = check_output_writable(output_dir)
     if problem:
+        if not args.allow_unwritable_output:
+            parser.exit(
+                2,
+                f"[ERROR] Session metadata cannot be written ({problem}).\n"
+                "Without it, recordings of this session cannot be aligned to "
+                "protocol time.\nFix the output location, or re-run with "
+                "--allow-unwritable-output to proceed anyway.\n",
+            )
         print(
-            f"[WARNING] Session output directory is not writable ({problem}). "
-            "The session will run, but its metadata sidecar cannot be written, "
-            "so recordings of it will not be alignable to protocol time."
+            "=" * 72,
+            "[OVERRIDE] Running WITHOUT session metadata, by explicit request",
+            "[OVERRIDE]   --allow-unwritable-output was passed",
+            f"[OVERRIDE]   reason: {problem}",
+            "[OVERRIDE] Recordings of this session will NOT be alignable to",
+            "[OVERRIDE] protocol time. The audio configuration and alert",
+            "[OVERRIDE] emission times will be lost when this process exits.",
+            "=" * 72,
+            sep="\n",
         )
 
     (

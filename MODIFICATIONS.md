@@ -14,10 +14,19 @@ meet. It has diverged substantially and is not intended to track upstream.
 
 ### Package structure
 
-The original was a flat directory of scripts. Code is now organised into
-`game/`, `ui/`, `config/`, `user/` and `assets/`, with a `setup.py` so the task
-can be installed and launched as a package rather than run from its own
-directory.
+The original was a flat directory of scripts. Code now lives under a single
+`memtest/` package (`memtest/game/`, `memtest/ui/`, `memtest/config/`,
+`memtest/user/`, `memtest/assets/`), installable with a `memtest` console
+script.
+
+The single top-level package matters: a flat layout would claim names like
+`config`, `game` and `user` in site-packages, which collide with almost anything
+installed alongside it. That made the package unusable as a dependency.
+
+Session output is written relative to the working directory (`./data/memtest` by
+default, overridable with `--output-dir`). It was previously resolved relative to
+the package, which for an installed package would have written outside the
+installation entirely.
 
 ### Configuration
 
@@ -93,5 +102,6 @@ be told apart in a recording, and that now warns.
 ## Known gaps
 
 - `task_complete` has a configured sound but is not raised by any call site.
-- An unwritable output directory warns before the session but does not stop it.
+- `tools/generate_alerts.py` is a repository script and is not shipped in the
+  installed package.
 - The gap between intended and actual emission time is unmeasured.
