@@ -1,0 +1,7 @@
+{
+  "num_trials": 40,
+  "trials_per_effort": 10,
+  "wait_baseline": 60,
+  "wait_breaks": 15,
+  "wait_endline": 120
+}

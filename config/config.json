@@ -1,0 +1,24 @@
+{
+  "session": {
+    "num_trials": 2,
+    "trials_per_effort": 1,
+    "wait_baseline": 5,
+    "wait_breaks": 2,
+    "wait_endline": 5
+  },
+  "game": {
+    "num_hexagons": 36,
+    "score_threshold": 0.7,
+    "enable_audio_alerts": true,
+    "volume": 0.5,
+    "audio_files": {
+      "start_baseline": "assets/alerts/warm/start_baseline.wav",
+      "start_game": "assets/alerts/warm/start_game.wav",
+      "start_break": "assets/alerts/warm/start_break.wav",
+      "end_break": "assets/alerts/warm/end_break.wav",
+      "start_endline": "assets/alerts/warm/start_endline.wav",
+      "end_game": "assets/alerts/warm/end_game.wav",
+      "task_complete": "assets/alerts/warm/task_complete.wav"
+    }
+  }
+}
