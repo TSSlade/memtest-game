@@ -52,7 +52,7 @@ class TaskGuiding:
             if time.time() >= endTime:
                 break
 
-        # show the white screen to the user in order to get his/her answer
+        # show the white screen to the user in order to get their answer
         terminated = False  # if answering is terminated or not
         clicked_hexagon_id = set()
 
@@ -151,13 +151,17 @@ class TaskGuiding:
 
 
 def task_param_based_on_screen(screen, num_x=6, num_y=6):
-    """input
+    """Derive hexagon geometry from the screen size.
+
+    input
     -------
             screen: pygame screen object
     output
     -------
-            R_hexagon: radius of each hexagon based on screen size
-            position_init: the position of the most left hexagon based on screen size"""
+            R_hexagon: radius of each hexagon, based on screen size
+            position_init: the position of the leftmost hexagon, based on screen
+                    size
+    """
     screen_width, screen_height = screen.get_size()
     R_hexagon = screen_width / 25
     d_hexagon = 2 * R_hexagon * math.cos(math.radians(30))

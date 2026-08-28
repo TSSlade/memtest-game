@@ -112,7 +112,7 @@ class InputBox:
     ):
         self.type_text = type_text
         self.text = initial_text
-        # rect paramters based on screen size
+        # rect parameters based on screen size
         screen_width, screen_height = screen.get_size()
         self.FONT = pygame.font.Font(None, screen_width // 48)
         w = screen_width // 7
