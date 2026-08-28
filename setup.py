@@ -21,12 +21,17 @@ setup(
     package_data={
         "memtest": ["assets/alerts/*/*.wav", "assets/*.png", "config/*.json"]
     },
-    # 3.10, not 3.9: the codebase annotates with PEP 604 unions (`Path | None`)
-    # in function signatures, which are evaluated at definition time. On 3.9 the
-    # package installs and then fails on import.
-    python_requires=">=3.10",
+    python_requires=">=3.14",
     install_requires=[
-        "pygame>=2.1.2",
+        # pygame-ce, not pygame. They are a fork and its upstream, both provide
+        # the `pygame` module, and only pygame-ce publishes wheels for CPython
+        # 3.14 -- upstream pygame stops at 3.13, where installing on 3.14 falls
+        # back to an sdist build that needs SDL development headers. The import
+        # is unchanged: `import pygame` still works.
+        #
+        # The two cannot coexist. If an environment already has upstream pygame,
+        # uninstall it first or the module that wins is undefined.
+        "pygame-ce>=2.5.8",
         "pandas",
         "numpy",
         "matplotlib",
@@ -44,6 +49,7 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.14",
         "Intended Audience :: Science/Research",
     ],
 )

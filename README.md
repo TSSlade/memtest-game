@@ -18,7 +18,7 @@ afterwards.
 
 ## Installation
 
-Requires Python 3.10 or newer.
+Requires **Python 3.14 or newer**.
 
 ```bash
 pip install .
@@ -27,9 +27,25 @@ pip install .
 For development, using [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv venv .venv
+uv venv --python 3.14 .venv
 uv pip install --python .venv/bin/python -e ".[dev]"
 ```
+
+### A note on pygame
+
+This depends on **`pygame-ce`**, not `pygame`. They are a fork and its upstream,
+they both provide the `pygame` module, and **they cannot coexist in one
+environment** — if upstream `pygame` is already installed, uninstall it first or
+which module wins is undefined:
+
+```bash
+pip uninstall pygame
+```
+
+The reason is Python 3.14: upstream `pygame` publishes wheels only up to CPython
+3.13, so installing it on 3.14 falls back to building from source and needs SDL
+development headers. `pygame-ce` ships 3.14 wheels. Nothing in the code changes —
+`import pygame` still works.
 
 ## Running a session
 

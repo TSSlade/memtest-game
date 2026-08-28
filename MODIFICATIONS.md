@@ -34,6 +34,17 @@ the package, which for an installed package would have written outside the
 installation entirely. All of a session's output goes to that one directory: the
 behavioural data and the sidecar that timestamps it are of little use apart.
 
+### Dependencies and Python version
+
+The floor is Python 3.14, and the pygame dependency is **`pygame-ce`** rather
+than upstream `pygame`. Upstream publishes wheels only up to CPython 3.13, so on
+3.14 it falls back to an sdist build requiring SDL development headers;
+`pygame-ce` ships 3.14 wheels and is a drop-in fork, so `import pygame` is
+unchanged.
+
+The two cannot coexist — both provide the `pygame` module — so an environment
+holding upstream `pygame` must have it removed first.
+
 ### Configuration
 
 Session and game parameters were hard-coded. They now load from JSON, backed by

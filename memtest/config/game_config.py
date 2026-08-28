@@ -46,7 +46,7 @@ class GameConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "GameConfig":
+    def from_dict(cls, data: dict) -> GameConfig:
         """Create GameConfig from dictionary, using defaults for missing keys."""
         defaults = cls()
         audio_files_data = data.get("audio_files", {})
