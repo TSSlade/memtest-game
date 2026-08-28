@@ -137,3 +137,55 @@ jobs:
               sys.exit(1)
           print(f"{wheel}: all packaged data present ({len(wavs)} alert sounds)")
           PY
+
+      # The step above proves the files are in the archive. This proves the
+      # installed package imports, finds them at runtime, and still has its
+      # console script.
+      #
+      # It runs from outside the repository on purpose. This project uses a flat
+      # layout, so `import memtest` at the repository root resolves to the
+      # working tree rather than to site-packages -- a check run there would pass
+      # while the installed copy was broken. That is not hypothetical: it
+      # produced a false verification during development. The site-packages
+      # assertion below fails if this ever stops running from a neutral
+      # directory.
+      - name: Smoke-test the installed wheel
+        run: |
+          uv venv --python 3.14 /tmp/wheelcheck
+          uv pip install --python /tmp/wheelcheck/bin/python dist/*.whl
+          cd /tmp/wheelcheck
+          SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy /tmp/wheelcheck/bin/python - <<'PY'
+          import sys
+
+          import memtest
+          from memtest.game.main_game import config_profile
+          from memtest.paths import ASSETS_DIR, CONFIG_DIR
+          from memtest.tools.generate_alerts import worst_correlation
+
+          problems = []
+
+          if "site-packages" not in memtest.__file__:
+              problems.append(
+                  f"imported the working tree, not the install: {memtest.__file__}"
+              )
+          if not (ASSETS_DIR / "guide_en.png").is_file():
+              problems.append("guide_en.png missing from the install")
+
+          wavs = list((ASSETS_DIR / "alerts").rglob("*.wav"))
+          if len(wavs) != 21:
+              problems.append(f"expected 21 alert sounds, found {len(wavs)}")
+
+          if config_profile(CONFIG_DIR / "config.json") != "smoke-test":
+              problems.append("packaged config lost its smoke-test marker")
+
+          if not 0 < worst_correlation("warm") < 0.03:
+              problems.append("alert generator did not survive packaging")
+
+          if problems:
+              for problem in problems:
+                  print("ERROR:", problem)
+              sys.exit(1)
+          print(f"installed package OK: {memtest.__file__}")
+          PY
+          SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy /tmp/wheelcheck/bin/memtest --help > /dev/null
+          echo "console script OK"
