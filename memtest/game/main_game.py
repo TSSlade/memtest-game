@@ -59,6 +59,7 @@ def dda_rule_based(
     tracker,
     event_timestamps,
     alert_log=None,
+    output_dir,
     session_config,
     game_config,
 ):
@@ -119,8 +120,8 @@ def dda_rule_based(
             )
     if save_gameplay_data:
         gameplay_data_df = pd.DataFrame(gameplay_data_list)
-        # Output to grandparent's data/memtest/ directory
-        output_dir = default_output_dir()
+        # The caller's resolved output directory, not a freshly computed default:
+        # the behavioural data and the sidecar that timestamps it belong together.
         output_dir.mkdir(parents=True, exist_ok=True)
         gameplay_data_df.to_csv(output_dir / f"{gameplay_data_file_name}.csv")
         gameplay_data_df.to_pickle(output_dir / f"{gameplay_data_file_name}.pkl")
@@ -148,7 +149,19 @@ def _load_game_config(config_path: Path | None = None) -> GameConfig:
     return GameConfig()
 
 
-def game_provider_rule_based(*args):
+def game_provider_rule_based(config_path=None, output_dir=None):
+    """Run one session.
+
+    `config_path` and `output_dir` come from the command line. They are real
+    parameters rather than the `*args` this used to take, because a signature
+    that accepted anything and used nothing is how `--output-dir` came to be
+    honoured for the sidecar and ignored for the behavioural data.
+    """
+    if config_path is None:
+        config_path = CONFIG_DIR / "config.json"
+    if output_dir is None:
+        output_dir = default_output_dir()
+
     event_timestamps = {}
     pygame.init()
     pygame.mixer.init()
@@ -158,8 +171,6 @@ def game_provider_rule_based(*args):
     welcome_obj = Welcome(screen)
     welcome_obj.handler()
     screen.fill(screen_color)
-    # Use default config path (can be overridden via args if needed)
-    config_path = CONFIG_DIR / "config.json"
     signup_page_obj = SignUp(screen, screen_color=screen_color, config_path=config_path)
     user_info, session_config = signup_page_obj.handler()
     game_config = _load_game_config(config_path)
@@ -221,6 +232,7 @@ def game_provider_rule_based(*args):
         tracker=None,
         event_timestamps=event_timestamps,
         alert_log=alert_log,
+        output_dir=output_dir,
         session_config=session_config,
         game_config=game_config,
     )
@@ -258,6 +270,15 @@ def main(argv=None):
         description="Run a visual working memory session.",
     )
     parser.add_argument(
+        "--config",
+        default=None,
+        help=(
+            "Protocol configuration file. Defaults to the packaged "
+            "config.json, which is a smoke-test protocol, not a research one. "
+            "Copy example-config.json, adapt it, and pass it here."
+        ),
+    )
+    parser.add_argument(
         "--output-dir",
         default=None,
         help="Where to write session output. Defaults to ./data/memtest.",
@@ -271,6 +292,20 @@ def main(argv=None):
         ),
     )
     args = parser.parse_args(argv)
+
+    # A typo'd --config must not silently fall back to the packaged default: that
+    # would run the smoke-test protocol in place of the intended one, which looks
+    # like a successful session and is not noticeable until analysis.
+    config_path = None
+    if args.config is not None:
+        config_path = Path(args.config)
+        if not config_path.is_file():
+            parser.exit(
+                2,
+                f"[ERROR] Configuration file not found: {config_path}\n"
+                "Refusing to fall back to the packaged default, which is a "
+                "smoke-test protocol rather than a research one.\n",
+            )
 
     # Checked before a participant's time is spent, so an unusable output
     # location costs seconds rather than a whole session. Without the sidecar a
@@ -306,7 +341,7 @@ def main(argv=None):
         game_config,
         event_timestamps,
         alert_log,
-    ) = game_provider_rule_based()
+    ) = game_provider_rule_based(config_path=config_path, output_dir=output_dir)
     last = getattr(user_info, "last_name", "anon").strip().replace(" ", "_") or "anon"
     first = getattr(user_info, "name", "anon").strip().replace(" ", "_") or "anon"
     timestamp = datetime.now().strftime("%Y-%m-%d_%Hh%M")
