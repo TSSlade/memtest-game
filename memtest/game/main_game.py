@@ -84,7 +84,6 @@ def dda_rule_based(
             user_info=user_info,
             session_config=session_config,
             game_config=game_config,
-            difficulty=None,
             num_x=num_x,
             num_y=num_y,
             show_time=2,
