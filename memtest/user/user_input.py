@@ -18,9 +18,7 @@ class UserInput:
         if default_values is None:
             default_values = {}
         for field, label in fields.items():
-            self.title_boxes[field] = TitleOfInputBox(
-                screen, title_text=label, x=x, y=y
-            )
+            self.title_boxes[field] = TitleOfInputBox(screen, title_text=label, x=x, y=y)
             self.input_boxes[field] = InputBox(
                 screen,
                 type_text=field,

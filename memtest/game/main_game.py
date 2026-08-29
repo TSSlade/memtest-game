@@ -95,9 +95,7 @@ def dda_rule_based(
         )
         score = task_obj.run_task(screen, alert_log=alert_log)
         gameplay_data_list.append(vars(task_obj))
-        print(
-            f"[{step + 1}]/[{episode_len}]: {100 * score:1.2f}% of {n_target} targets"
-        )
+        print(f"[{step + 1}]/[{episode_len}]: {100 * score:1.2f}% of {n_target} targets")
         score_list.append(score)
         if score is not None and 0.9 < score <= 1:
             n_target += 1
@@ -112,17 +110,13 @@ def dda_rule_based(
             break_tally += 1
             curr_break = f"break_{break_tally:02}"
             event_timestamps[f"{curr_break}_start"] = datetime.now()
-            print(
-                f"Starting break {break_tally} at {event_timestamps.get(curr_break + '_start')}"
-            )
+            print(f"Starting break {break_tally} at {event_timestamps.get(curr_break + '_start')}")
             beep("start_break", game_config, alert_log=alert_log)
             for _ in tqdm(iterable=range(wait_breaks), unit="s"):
                 time.sleep(1)
             event_timestamps[f"{curr_break}_end"] = datetime.now()
             beep("end_break", game_config, alert_log=alert_log)
-            print(
-                f"Ending break {break_tally} at {event_timestamps.get(curr_break + '_end')}"
-            )
+            print(f"Ending break {break_tally} at {event_timestamps.get(curr_break + '_end')}")
     if save_gameplay_data:
         gameplay_data_df = pd.DataFrame(gameplay_data_list)
         # The caller's resolved output directory, not a freshly computed default:
@@ -142,7 +136,7 @@ def config_profile(config_path: Path) -> str | None:
     try:
         with open(config_path, encoding="utf-8") as handle:
             return json.load(handle).get("_profile")
-    except (OSError, json.JSONDecodeError):
+    except OSError, json.JSONDecodeError:
         return None
 
 
@@ -161,7 +155,7 @@ def warn_if_smoke_test_config(config_path: Path) -> bool:
     try:
         with open(config_path, encoding="utf-8") as handle:
             session = json.load(handle).get("session", {})
-    except (OSError, json.JSONDecodeError):
+    except OSError, json.JSONDecodeError:
         session = {}
     print(
         "=" * 72,
@@ -260,9 +254,7 @@ def game_provider_rule_based(config_path=None, output_dir=None):
     print("Starting baseline - playing start_baseline sound")
     event_timestamps["baseline_start"] = datetime.now()
     beep("start_baseline", game_config, alert_log=alert_log)
-    print(
-        f"Starting {wait_baseline}-sec. baseline at {event_timestamps.get('baseline_start')}"
-    )
+    print(f"Starting {wait_baseline}-sec. baseline at {event_timestamps.get('baseline_start')}")
     for _ in tqdm(range(wait_baseline), unit="s"):
         time.sleep(1)
     event_timestamps["baseline_end"] = datetime.now()

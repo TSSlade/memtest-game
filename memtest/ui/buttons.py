@@ -87,9 +87,7 @@ class TitleOfInputBox:
         h = screen_height // 27
         self.rect = pygame.Rect(x, y, w, h)
         self.color_border_inactive = color_border_inactive
-        self.text_surface = self.FONT.render(
-            self.title_text.capitalize(), True, text_color
-        )
+        self.text_surface = self.FONT.render(self.title_text.capitalize(), True, text_color)
 
     def draw(self, screen):
         screen.blit(self.text_surface, (self.rect.x + 5, self.rect.y + 5))

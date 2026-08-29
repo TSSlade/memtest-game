@@ -75,6 +75,13 @@ jobs:
       - name: Ruff
         run: .venv/bin/ruff check .
 
+      # `--check`, never a bare `ruff format`. The rewriting form cannot fail: it
+      # would make edits that are discarded with the runner, so the step would
+      # pass unconditionally and enforce nothing. The obvious command is the
+      # useless one here.
+      - name: Ruff format
+        run: .venv/bin/ruff format --check .
+
       # Inherited upstream prose carried a dozen typos, including parameter
       # names that did not exist. Configuration, including the exclusion of the
       # verbatim CONSTITUTION.md mirror, lives in pyproject.toml.

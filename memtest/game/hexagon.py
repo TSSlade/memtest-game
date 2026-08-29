@@ -17,9 +17,7 @@ class HexagonTile:
     answer_color: tuple[int, int, int] = (255, 255, 255)  # answer color of white
 
     def __post_init__(self):
-        self.hex_color = (
-            (255, 255, 255) if self.is_target_cell is False else (255, 215, 0)
-        )
+        self.hex_color = (255, 255, 255) if self.is_target_cell is False else (255, 215, 0)
         self.vertices = self.compute_vertices()
 
     def compute_vertices(self) -> list[tuple[float, float]]:
@@ -78,4 +76,3 @@ class HexagonTile:
     @property
     def highlight_clr(self) -> tuple[int, ...]:
         return tuple(x for x in self.hex_color)
-
