@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Runs the same two checks CI runs, before a push leaves the machine.
+# Runs the same checks CI runs, before a push leaves the machine.
 #
 # Enable with:
 #     git config core.hooksPath .githooks
@@ -16,9 +16,11 @@ cd "$repo_root"
 if [ -x .venv/bin/ruff ] && [ -x .venv/bin/pytest ]; then
     ruff() { .venv/bin/ruff "$@"; }
     pytest() { .venv/bin/pytest "$@"; }
+    codespell() { .venv/bin/codespell "$@"; }
 elif command -v uv >/dev/null 2>&1; then
     ruff() { uv run --quiet ruff "$@"; }
     pytest() { uv run --quiet pytest "$@"; }
+    codespell() { uv run --quiet codespell "$@"; }
 else
     cat >&2 <<'MSG'
 [pre-push] Neither .venv nor uv found, so checks cannot run.
@@ -35,6 +37,20 @@ fi
 echo "[pre-push] ruff"
 if ! ruff check .; then
     echo "[pre-push] ruff failed -- push aborted." >&2
+    exit 1
+fi
+
+# --check, not a bare `ruff format`: the rewriting form cannot fail, so it
+# would silently reformat the tree and let the push through.
+echo "[pre-push] ruff format"
+if ! ruff format --check .; then
+    echo "[pre-push] formatting differs -- run 'ruff format .' then retry." >&2
+    exit 1
+fi
+
+echo "[pre-push] codespell"
+if ! codespell; then
+    echo "[pre-push] codespell failed -- push aborted." >&2
     exit 1
 fi
 

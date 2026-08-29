@@ -127,11 +127,16 @@ reintroduce string forward references.
 
 ### Checks
 
-Run both before reporting a change complete:
+Run all of these before reporting a change complete:
 
 ```bash
-.venv/bin/ruff check . && .venv/bin/pytest
+.venv/bin/ruff check . && .venv/bin/ruff format --check . \
+  && .venv/bin/codespell && .venv/bin/pytest
 ```
+
+Note `ruff format --check`, not a bare `ruff format`. The rewriting form cannot
+fail, so using it as a gate enforces nothing — in CI its edits are discarded with
+the runner. Run `ruff format .` to fix, `--check` to verify.
 
 All configuration — packaging, dependencies, `ruff` and `pytest` — lives in
 `pyproject.toml`. There is no `setup.py`, `pytest.ini` or `ruff.toml`; do not
