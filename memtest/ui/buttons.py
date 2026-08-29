@@ -24,7 +24,6 @@ class NextButton:
 
         self.text_surface = FONT.render(show_up_text, True, text_color)
         self.go_next_page = False
-        # self.border_color = 'black'
 
     def handle_click(self, click_event):
         if self.rect.collidepoint(click_event.pos):
@@ -60,12 +59,10 @@ class Title:
 
         self.text_surface = self.FONT.render(show_up_text, True, text_color)
         self.border_color = border_color
-        # self.border_color = 'black'
 
     def draw(self):
         self.screen.blit(self.text_surface, (self.rect.x + 5, self.rect.y + 5))
         pygame.draw.rect(self.screen, self.border_color, self.rect, 2)
-        # pygame.display.flip()
 
 
 class TitleOfInputBox:

@@ -32,9 +32,7 @@ class Welcome:
 
 if __name__ == "__main__":
     pygame.init()
-    # width, height = pygame.display.get_desktop_sizes()
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-    # print(type(screen))
     screen_color = (211, 211, 211)
     screen.fill(screen_color)
     welcome_object = Welcome(screen)

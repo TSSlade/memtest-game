@@ -5,16 +5,12 @@ from .buttons import NextButton
 
 
 class DemoPage:
-    # def __init__(self) -> None:
-    # self.screen = screen
-
     def provide_demo(self, screen):
         img1 = pygame.image.load(ASSETS_DIR / "guide_en.png")
         next_obj = NextButton(screen, border_color=(255, 255, 255))
         terminated = False
         while not terminated:
             event = pygame.event.wait()
-            # for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 raise SystemExit("Window closed by user")

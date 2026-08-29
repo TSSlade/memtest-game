@@ -22,7 +22,6 @@ class HexagonTile:
 
     def compute_vertices(self) -> list[tuple[float, float]]:
         """Returns a list of the hexagon's vertices as x, y tuples"""
-        # pylint: disable=invalid-name
         x, y = self.position
         half_radius = self.radius / 2
         minimal_radius = self.minimal_radius
@@ -64,7 +63,7 @@ class HexagonTile:
     @property
     def center(self) -> tuple[float, float]:
         """Centre of the hexagon"""
-        x, y = self.position  # pylint: disable=invalid-name
+        x, y = self.position
         return (x, y + self.radius)
 
     @property
