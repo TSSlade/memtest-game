@@ -79,8 +79,3 @@ class HexagonTile:
     def highlight_clr(self) -> tuple[int, ...]:
         return tuple(x for x in self.hex_color)
 
-
-## UNUSED/REDUNDANT IMPORTS FLAGGED:
-# 'field' from dataclasses is imported but never used
-# 'Tuple', 'List' from typing were imported but are not needed in Python 3.12+
-# 'from __future__ import annotations' is not needed in Python 3.12+
