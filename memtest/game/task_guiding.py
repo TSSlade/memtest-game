@@ -118,7 +118,7 @@ class TaskGuiding:
 
             # iterate over columns
             for _ in range(1, self.num_x):
-                x, y = hexagon.position  # type: ignore
+                x, y = hexagon.position
                 position = (x + hexagon.minimal_radius * 2, y)
                 position = (position[0], position[1])
 
@@ -189,6 +189,5 @@ if __name__ == "__main__":
             R_hexagon=R_hexagon,
         )
         task_gd_obj.run_guiding_task(screen)
-        # pprint(vars(task_gd_obj))
 
     pygame.display.quit()

@@ -11,6 +11,9 @@ import os
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 
+# E402 is suppressed deliberately, and these two must stay: the imports have to
+# follow the os.environ calls above. pygame reads SDL_VIDEODRIVER when it is
+# imported, so hoisting them to the top of the file would open a real window.
 import pytest  # noqa: E402
 
 from memtest.paths import MEMTEST_DIR  # noqa: E402

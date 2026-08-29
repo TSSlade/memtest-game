@@ -89,7 +89,6 @@ class Task:
         self.nailed_it: bool = False
         self.score: float
         self.end_answering_ts: datetime.datetime
-        # TODO: add task_number
         self.task_number = task_number
 
     def run_task(self, screen, alert_log=None):
@@ -250,7 +249,7 @@ class Task:
 
             # iterate over columns
             for _ in range(1, self.num_x):  # i is the column number
-                x, y = hexagon.position  # type: ignore
+                x, y = hexagon.position
                 position = (x + hexagon.minimal_radius * 2, y)
                 position = (position[0], position[1])
 
@@ -286,8 +285,10 @@ class Task:
         self.num_false = self.sequence_answer.count(0)
         self.nailed_it = self.num_true == self.n_target
         self.score = self.num_true / self.n_target
+        # main_game serialises this object with vars(task_obj) into the
+        # gameplay data, so anything that is not a value has to go first: a list
+        # of HexagonTile objects and a tracker handle are not columns.
         delattr(self, "hexagons")
-        # TODO: maybe i should delete the tracker attribute
         delattr(self, "tracker")
 
 
@@ -341,6 +342,4 @@ if __name__ == "__main__":
             task_number=None,
         )
         task_obj.run_task(screen)
-        # pprint(vars(task_obj))
-        # break
     pygame.display.quit()
