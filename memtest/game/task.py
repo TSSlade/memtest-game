@@ -23,7 +23,6 @@ class Task:
         user_info: UserInfo,
         session_config: SessionConfig,
         game_config: GameConfig,
-        difficulty,
         num_x,
         num_y,
         show_time,
@@ -45,7 +44,6 @@ class Task:
         session_config: SessionConfig: the protocol's session parameters.
         game_config: GameConfig: the game parameters, including the alert sounds
                 that double as camera synchronisation markers.
-        difficulty: float: the difficulty corresponding to this task.
         num_x: number of columns in the task table.
         num_y: number of rows in the task table.
         show_time: int: how many seconds the task is shown for, for the
@@ -68,7 +66,6 @@ class Task:
         self.tracker = tracker
         self.indices_target: list[int] = indices_target
         self.dda_mthd = dda_mthd
-        self.difficulty: float = difficulty
         self.num_x: int = num_x
         self.num_y: int = num_y
         self.show_time: int = show_time
@@ -336,7 +333,6 @@ if __name__ == "__main__":
             user_info={},
             session_config=None,
             game_config=None,
-            difficulty=None,
             num_x=6,
             num_y=6,
             show_time=2,
