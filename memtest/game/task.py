@@ -9,9 +9,9 @@ from .alerts import beep
 from .hexagon import HexagonTile
 
 if TYPE_CHECKING:
-    from config.game_config import GameConfig  # noqa: F401
-    from config.session_config import SessionConfig  # noqa: F401
-    from user.user_info import UserInfo  # noqa: F401
+    from ..config.game_config import GameConfig  # noqa: F401
+    from ..config.session_config import SessionConfig  # noqa: F401
+    from ..user.user_info import UserInfo  # noqa: F401
 
 
 class Task:
@@ -350,7 +350,3 @@ if __name__ == "__main__":
         # pprint(vars(task_obj))
         # break
     pygame.display.quit()
-
-## UNUSED/REDUNDANT IMPORTS FLAGGED:
-# 'from __future__ import annotations' is not needed in Python 3.12+
-# 'tuple' from typing is not needed in Python 3.12+
