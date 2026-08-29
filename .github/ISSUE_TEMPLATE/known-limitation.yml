@@ -1,0 +1,76 @@
+# Stays OPEN and is never worked. The label does half the job; the status
+# blockquote in the body does the other half, because a reader who skims past the
+# label still needs the signal.
+#
+# `known-limitation` is not one of GitHub's built-in labels, so create it once per
+# repo or the form will silently drop it:
+#
+#   gh label create known-limitation --color 6a737d \
+#     --description "Documented and accepted; not planned. Kept open for visibility, not as backlog."
+#
+# Deliberately not `wontfix`: that label reads as *closed* by convention, and a
+# closed issue is invisible, which defeats the purpose.
+name: Known limitation
+description: Something accepted as-is. Stays open for visibility; not backlog.
+labels: ["known-limitation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a constraint you have decided to live with. It stays **open** so it
+        stays findable — an open issue is the only kind anyone sees.
+
+        Not a backlog item and not a bug. If you would take a fix, use
+        `bug.yml` or `task.yml` instead.
+
+  - type: textarea
+    id: status-notice
+    attributes:
+      label: Status notice
+      description: Leave this exactly as it is. It is what survives a reader who never looks at the labels.
+      value: |
+        > **Status: known limitation.** Documented and accepted; not planned.
+        > Kept open for visibility, not as a backlog item — please do not treat
+        > this as available work, and do not close it as stale.
+    validations:
+      required: true
+
+  - type: textarea
+    id: limitation
+    attributes:
+      label: The limitation
+      description: >
+        What does not work, or does not hold. Concretely enough that someone can
+        recognise having hit it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why-not-pursued
+    attributes:
+      label: Why this is unlikely to be pursued
+      description: >
+        The reasoning, in enough depth that a future reader does not relitigate
+        it from scratch. Without this field the next person just re-opens the
+        argument.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-would-change-it
+    attributes:
+      label: What would change the calculus
+      description: >
+        The condition under which this becomes worth doing. "Nothing" is a
+        legitimate answer, but say so explicitly — an unstated "never" reads as
+        an oversight.
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: What to do instead, if there is anything.
+    validations:
+      required: false

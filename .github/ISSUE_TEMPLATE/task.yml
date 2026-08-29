@@ -1,0 +1,36 @@
+name: Task
+description: Deferred work that is not a bug.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For work that is **deferred**. If you are about to do it in this session,
+        just do it — an issue you open and close yourself is a to-do list with
+        extra steps.
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: >
+        What is true once this is finished. An observable end state, not an
+        activity.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: The check that closes this. One line if possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Why now
+      description: What prompted this and what it blocks.
+    validations:
+      required: false
