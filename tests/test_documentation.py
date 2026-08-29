@@ -50,11 +50,7 @@ def test_no_references_to_the_pre_restructure_layout(name):
         text,
     )
     # A path is fine when it is already qualified with the package directory.
-    unqualified = [
-        match
-        for match in stale
-        if not re.search(rf"memtest/{re.escape(match)}", text)
-    ]
+    unqualified = [match for match in stale if not re.search(rf"memtest/{re.escape(match)}", text)]
     assert not unqualified, f"{name} refers to pre-restructure paths: {unqualified}"
 
 
@@ -100,9 +96,7 @@ def test_task_init_docstring_matches_its_signature():
     doc = Task.__init__.__doc__ or ""
     documented = re.findall(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:", doc, re.M)
 
-    assert documented == signature, (
-        f"docstring lists {documented}, signature has {signature}"
-    )
+    assert documented == signature, f"docstring lists {documented}, signature has {signature}"
 
 
 def test_constitution_is_present_and_attributed():

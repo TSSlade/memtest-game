@@ -31,9 +31,7 @@ class SignUp:
         y_init_1 = screen_height / 4
         x_init_2 = 3 * screen_width / 5
         y_init_2 = screen_height / 4
-        self.user_input = UserInput(
-            self.screen, config.user_fields, x_init_1, y_init_1, blank_spc
-        )
+        self.user_input = UserInput(self.screen, config.user_fields, x_init_1, y_init_1, blank_spc)
         # Load session defaults from config file
         session_defaults = self._load_session_defaults(config_path)
         self.session_input = UserInput(
@@ -88,9 +86,7 @@ class SignUp:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 raise SystemExit("Window closed by user")
-            if event.type == pygame.MOUSEBUTTONDOWN and self.next_button.handle_click(
-                event
-            ):
+            if event.type == pygame.MOUSEBUTTONDOWN and self.next_button.handle_click(event):
                 terminated = True
             self.user_input.handle_event(event)
             self.session_input.handle_event(event)

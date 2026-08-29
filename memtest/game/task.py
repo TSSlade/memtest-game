@@ -151,9 +151,7 @@ class Task:
                             and id(hexagon) not in clicked_hexagon_id
                         ):
                             # append response time to sequence_response_time
-                            if (
-                                len(clicked_hexagon_id) == 0
-                            ):  # if it is the first click of the user
+                            if len(clicked_hexagon_id) == 0:  # if it is the first click of the user
                                 self.sequence_response_time.append(
                                     t_current_click - self.start_answering_ts
                                 )

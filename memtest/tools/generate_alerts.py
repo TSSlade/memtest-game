@@ -141,9 +141,7 @@ def render(low_hz: float, high_hz: float, duration_s: float = DURATION_S):
     for index, freq in enumerate((low_hz, high_hz)):
         start = index * offset
         tail = time[: length - start]
-        tone = np.sin(2 * np.pi * freq * tail) + 0.25 * np.sin(
-            2 * np.pi * 2 * freq * tail
-        )
+        tone = np.sin(2 * np.pi * freq * tail) + 0.25 * np.sin(2 * np.pi * 2 * freq * tail)
         voice = np.zeros(length)
         voice[start:] = tone * np.exp(-6 * tail)
         out += voice

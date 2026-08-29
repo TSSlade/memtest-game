@@ -89,9 +89,7 @@ def test_from_dict_ignores_unknown_keys():
 
 def test_custom_config_file_is_honoured(tmp_path):
     path = tmp_path / "protocol.json"
-    path.write_text(
-        json.dumps({"game": {"num_hexagons": 24, "volume": 0.9}}), encoding="utf-8"
-    )
+    path.write_text(json.dumps({"game": {"num_hexagons": 24, "volume": 0.9}}), encoding="utf-8")
     config = _load_game_config(path)
     assert (config.num_hexagons, config.volume) == (24, 0.9)
 
@@ -120,8 +118,6 @@ def test_smoke_test_marker_does_not_reach_signup_defaults():
     """Session defaults become text boxes, so a stray key would show up as one."""
     from memtest.ui.sign_up_page import SignUp
 
-    defaults = SignUp._load_session_defaults(
-        SignUp.__new__(SignUp), CONFIG_DIR / "config.json"
-    )
+    defaults = SignUp._load_session_defaults(SignUp.__new__(SignUp), CONFIG_DIR / "config.json")
     assert not any(key.startswith("_") for key in defaults)
     assert set(defaults) == set(SessionConfig().to_dict())

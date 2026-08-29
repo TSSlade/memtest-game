@@ -122,9 +122,7 @@ def test_config_source_defaults_to_empty_rather_than_missing():
 def test_write_session_metadata_round_trips(tmp_path):
     path = write_session_metadata(tmp_path / "nested" / "session.json", _payload())
     assert path is not None
-    assert json.loads(path.read_text(encoding="utf-8"))["schema_version"] == (
-        SCHEMA_VERSION
-    )
+    assert json.loads(path.read_text(encoding="utf-8"))["schema_version"] == (SCHEMA_VERSION)
 
 
 def test_write_session_metadata_reports_failure_rather_than_raising(tmp_path):

@@ -63,9 +63,7 @@ class TaskGuiding:
                     pygame.quit()
                     raise SystemExit("Window closed by user")
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    pos = (
-                        pygame.mouse.get_pos()
-                    )  # position of the mouse clicked; (x, y)
+                    pos = pygame.mouse.get_pos()  # position of the mouse clicked; (x, y)
                     # find the hexagon which the user clicked on
                     for hexagon in self.hexagons:
                         if (

@@ -58,9 +58,7 @@ class GameConfig:
         return cls(
             num_hexagons=data.get("num_hexagons", defaults.num_hexagons),
             score_threshold=data.get("score_threshold", defaults.score_threshold),
-            enable_audio_alerts=data.get(
-                "enable_audio_alerts", defaults.enable_audio_alerts
-            ),
+            enable_audio_alerts=data.get("enable_audio_alerts", defaults.enable_audio_alerts),
             volume=data.get("volume", defaults.volume),
             audio_files=merged_audio_files,
         )
