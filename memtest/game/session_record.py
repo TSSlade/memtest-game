@@ -188,13 +188,10 @@ def build_session_metadata(
             "name": getattr(user_info, "name", None),
             "last_name": getattr(user_info, "last_name", None),
         },
-        "session_config": (
-            session_config.to_dict() if hasattr(session_config, "to_dict") else {}
-        ),
+        "session_config": (session_config.to_dict() if hasattr(session_config, "to_dict") else {}),
         "audio": resolve_audio_config(game_config, root),
         "event_timestamps": {
-            key: value.isoformat(timespec="milliseconds")
-            for key, value in event_timestamps.items()
+            key: value.isoformat(timespec="milliseconds") for key, value in event_timestamps.items()
         },
         "alert_emissions": alert_log.entries,
         "notes": {
