@@ -81,13 +81,20 @@ def test_task_init_docstring_matches_its_signature():
     The docstring is written in signature order so the agreement is checked here
     rather than trusted.
     """
+    import annotationlib
     import inspect
 
     from memtest.game.task import Task
 
+    # FORWARDREF, because some parameters are annotated with types imported only
+    # under TYPE_CHECKING. Under PEP 649 those annotations are never evaluated at
+    # runtime, so the default VALUE format would raise NameError trying to
+    # resolve them -- and this test wants the parameter names, not their types.
     signature = [
         name
-        for name in inspect.signature(Task.__init__).parameters
+        for name in inspect.signature(
+            Task.__init__, annotation_format=annotationlib.Format.FORWARDREF
+        ).parameters
         if name != "self"
     ]
     doc = Task.__init__.__doc__ or ""
