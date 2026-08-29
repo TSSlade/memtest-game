@@ -9,9 +9,9 @@ from .alerts import beep
 from .hexagon import HexagonTile
 
 if TYPE_CHECKING:
-    from ..config.game_config import GameConfig  # noqa: F401
-    from ..config.session_config import SessionConfig  # noqa: F401
-    from ..user.user_info import UserInfo  # noqa: F401
+    from ..config.game_config import GameConfig
+    from ..config.session_config import SessionConfig
+    from ..user.user_info import UserInfo
 
 
 class Task:
@@ -20,9 +20,9 @@ class Task:
         *,
         indices_target,
         dda_mthd,
-        user_info,  # UserInfo dataclass
-        session_config,  # SessionConfig dataclass
-        game_config,  # GameConfig dataclass
+        user_info: UserInfo,
+        session_config: SessionConfig,
+        game_config: GameConfig,
         difficulty,
         num_x,
         num_y,
