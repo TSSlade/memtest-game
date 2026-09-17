@@ -17,8 +17,7 @@ Read the issue, relevant comments, parent and sub-issues, and linked PRs. Identi
 
 Inspect the repository's actual state: remote, intended base branch, local changes, branches, and registered worktrees. Do not assume the current checkout is the appropriate starting point.
 
-If a matching branch, worktree, or PR exists, determine whether it belongs to this work and can be resumed. An issue number in a branch name alone does not establish ownership. If another session appears to be working on it and ownership is unclear, consult the user before proceeding with competing implementation. Never change another session's checkout, discard its changes, or reset or remove its branches or worktrees. Worktrees share repository metadata: avoid repository-wide configuration changes
-and other operations that could interfere with concurrent sessions.
+If a matching branch, worktree, or PR exists, determine whether it belongs to this work and can be resumed. An issue number in a branch name alone does not establish ownership. If another session appears to be working on it and ownership is unclear, consult the user before proceeding with competing implementation. Never change another session's checkout, discard its changes, or reset or remove its branches or worktrees. Worktrees share repository metadata: avoid repository-wide configuration changes and other operations that could interfere with concurrent sessions.
 
 Apply the repository's sub-issue rules when work needs decomposition. Do not create issues merely to list steps you are about to perform.
 
