@@ -185,3 +185,21 @@ line.
 When you change a path, a flag, or an output file, update `MODIFICATIONS.md` in
 the same change. Its accuracy is load-bearing: it is the only record of *why*
 the design is what it is.
+
+### Skills under `.claude/skills/` are copies owned by `tedals-monorepo`
+
+`issue-workflow`, `doc-staleness-check` and `explain-diff-html` are
+byte-identical copies of `~/projects/tedals-monorepo/.claude/skills/`. Do not
+edit them here: **nothing in this repo compares them against their source**, and
+the monorepo's own checks do not know this repo exists, so a local edit is drift
+with nothing behind it. Fix the skill upstream and copy it down.
+
+- `issue-workflow` is the procedure for taking a GitHub issue to a verified PR.
+  It defers to this file for decision authority, testing requirements and the
+  completion gate, so the `### Checks` list above is what it means by "the
+  repository's prescribed verification". It does not authorize merging.
+- `explain-diff-html` writes its HTML to `~/projects/tedals-monorepo/til/` —
+  one location for every repo on this machine. Do not create a `til/` here;
+  cite the path from the commit message instead.
+- `doc-staleness-check` is the one that would catch a change leaving
+  `MODIFICATIONS.md` saying something no longer true.
