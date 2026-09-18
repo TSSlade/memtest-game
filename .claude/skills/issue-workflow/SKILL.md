@@ -75,7 +75,7 @@ Run `doc-staleness-check` when documented behavior changes.
 
 For a code-focused PR, invoke `explain-diff-html` now, while the implementation context is available. Follow its artifact-generation instructions, subject to the mandatory invocation and worktree-local output policy in `AGENTS.md`. Commit the artifact in this branch and prepare its link for the PR body. For exempt maintenance-only PRs, omit it.
 
-Run the completion checks required by the affected project and change, using the repository's own prescribed verification commands rather than an ad-hoc equivalent. Where the change is only observable in a generated or built artifact, verify it there rather than in the source that produces it.
+Run the completion checks the affected project requires for the kind of change made, as that repository's own instructions define them — `AGENTS.md` here names them per path. Run them against the changed working tree, using the repository's supported procedure rather than an ad-hoc equivalent.
 
 Record which revision was tested and what each check establishes. After a subsequent code change, rerun affected checks rather than relying on results for an older revision.
 
