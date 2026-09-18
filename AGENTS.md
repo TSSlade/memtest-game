@@ -185,3 +185,30 @@ line.
 When you change a path, a flag, or an output file, update `MODIFICATIONS.md` in
 the same change. Its accuracy is load-bearing: it is the only record of *why*
 the design is what it is.
+
+### Skills under `.claude/skills/` are copies owned by `tedals-monorepo`
+
+`issue-workflow`, `doc-staleness-check` and `explain-diff-html` are
+byte-identical copies taken from `~/projects/tedals-monorepo/skill-catalog/`,
+which holds the canonical bytes for every skill that repo owns. Do not edit them
+here: **nothing in this repo compares them against their source**, so a local
+edit is drift with nothing behind it. Fix the skill upstream and copy it down.
+
+That repo's `skill-catalog/catalog.txt` declares a `reach` for each skill —
+`here`, `new-repos`, `machine` — and `scripts/verify-skill-catalog.sh` checks
+each declared reach against the artifact implementing it, and each artifact
+against a declaration, so an unrecorded copy goes red. **There is no reach value
+for a repo like this one**, hand-installed rather than generated from the
+templates, so these three sit outside what that check can see. Tracked as
+[tedals-monorepo#73](https://github.com/TSSlade/tedals-monorepo/issues/73).
+
+- `issue-workflow` is the procedure for taking a GitHub issue to a verified PR.
+  It defers to this file for decision authority, testing requirements and the
+  completion gate, so the `### Checks` list above is what its step 5 means by
+  "the completion checks the affected project requires… as that repository's own
+  instructions define them". It does not authorize merging.
+- `explain-diff-html` writes its HTML to `~/projects/tedals-monorepo/til/` —
+  one location for every repo on this machine. Do not create a `til/` here;
+  cite the path from the commit message instead.
+- `doc-staleness-check` is the one that would catch a change leaving
+  `MODIFICATIONS.md` saying something no longer true.
