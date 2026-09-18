@@ -186,21 +186,27 @@ When you change a path, a flag, or an output file, update `MODIFICATIONS.md` in
 the same change. Its accuracy is load-bearing: it is the only record of *why*
 the design is what it is.
 
-### Skills under `.claude/skills/` are copies owned by `tedals-monorepo`
+### The monorepo's skills arrive by symlink, and are not in this repo
 
-`issue-workflow`, `doc-staleness-check` and `explain-diff-html` are
-byte-identical copies taken from `~/projects/tedals-monorepo/skill-catalog/`,
-which holds the canonical bytes for every skill that repo owns. Do not edit them
-here: **nothing in this repo compares them against their source**, so a local
-edit is drift with nothing behind it. Fix the skill upstream and copy it down.
+`issue-workflow`, `doc-staleness-check` and `explain-diff-html` are not checked
+in here. They arrive through `~/.claude/skills/`, where chezmoi deploys one
+symlink per skill pointing into `~/projects/tedals-monorepo/skill-catalog/` —
+the canonical bytes for every skill that repo owns. Each is a row in its
+`skill-catalog/catalog.txt` declaring `machine` reach, and
+`scripts/verify-skill-catalog.sh` checks that declaration against the symlink
+implementing it.
 
-That repo's `skill-catalog/catalog.txt` declares a `reach` for each skill —
-`here`, `new-repos`, `machine` — and `scripts/verify-skill-catalog.sh` checks
-each declared reach against the artifact implementing it, and each artifact
-against a declaration, so an unrecorded copy goes red. **There is no reach value
-for a repo like this one**, hand-installed rather than generated from the
-templates, so these three sit outside what that check can see. Tracked as
-[tedals-monorepo#73](https://github.com/TSSlade/tedals-monorepo/issues/73).
+They were byte-identical copies committed here until
+[#30](https://github.com/TSSlade/memtest-game/pull/30) was reversed. Copies of
+these same skills drifted from their source three times in a single week in the
+sibling repos that carried them, and nothing reported it. A symlink cannot
+drift, which is the whole argument.
+
+**This requires launching `claude` inside WSL.** Windows cannot follow a WSL
+symlink across `\\wsl.localhost`: every entry in a skills directory reads as
+`Input/output error`, nothing raises, and the session is simply never offered
+the skills. A desktop-app session rooted at the share has none of these three
+and will not say so.
 
 - `issue-workflow` is the procedure for taking a GitHub issue to a verified PR.
   It defers to this file for decision authority, testing requirements and the
